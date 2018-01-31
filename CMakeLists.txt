@@ -19,5 +19,8 @@ add_library(tinyRender
 
 
 ######## example
-add_executable(example1 example/example1.cpp)
-target_link_libraries(example1 tinyRender)
+add_executable(Triangle example/Triangle.cpp)
+target_link_libraries(Triangle tinyRender)
+
+add_executable(EmptyFrame example/EmptyFrame.cpp)
+target_link_libraries(EmptyFrame tinyRender)

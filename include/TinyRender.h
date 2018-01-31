@@ -10,6 +10,7 @@ class TinyRender
 {
   public:
     TinyRender(): mImage(nullptr) { }
+	TinyRender(TGAImage* image): mImage(image) { }
     virtual ~TinyRender() { }
 
     void attachBuffer(TGAImage* image);

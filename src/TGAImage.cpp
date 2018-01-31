@@ -367,4 +367,12 @@ bool TGAImage::scale(int w, int h) {
     return true;
 }
 
+void TGAImage::clearColor(const TGAColor& c) {
+	for (size_t i = 0; i < width; i++) {
+		for (size_t j = 0; j < height; j++) {
+			set(i, j, c);
+		}
+	}
+}
+
 }

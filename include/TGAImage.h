@@ -3,6 +3,7 @@
 
 namespace TRM {
 
+#pragma pack(push, 1)
 struct TGAHeader {
     char idlength;
     char colormaptype;
@@ -17,6 +18,7 @@ struct TGAHeader {
     char  bitsperpixel;
     char  imagedescriptor;
 };
+#pragma pack(pop)
 
 struct TGAColor {
     unsigned char bgra[4];
@@ -90,6 +92,7 @@ public:
     int get_bytespp();
     unsigned char *buffer();
     void clear();
+	void clearColor(const TGAColor& c);
 };
 
 }
