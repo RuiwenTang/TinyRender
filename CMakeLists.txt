@@ -24,3 +24,6 @@ target_link_libraries(Triangle tinyRender)
 
 add_executable(EmptyFrame example/EmptyFrame.cpp)
 target_link_libraries(EmptyFrame tinyRender)
+
+add_executable(ColorTriangle example/ColorTriangle.cpp)
+target_link_libraries(ColorTriangle tinyRender)
