@@ -45,4 +45,30 @@ void TinyRender::triangle(Vec2i* pts, TGAColor* colors) {
 	}
 }
 
+void TinyRender::triangle(Vec3f* pts, Vec2f* uvs, TGAImage* texture) {
+	Vec2i leftTop, rightBottom;
+
+	Vec2i ptis[3];
+	for (size_t i = 0; i < 3; i++) {
+		ptis[i][0] = int(pts[i][0] + .5f);
+		ptis[i][1] = int(pts[i][1] + .5f);
+	}
+
+	bbox(leftTop, rightBottom, ptis);
+
+	Vec2i p;
+	for (p[0] = leftTop[0]; p[0] <= rightBottom[0]; p[0]++) {
+		for (p[1] = leftTop[1]; p[1] <= rightBottom[1]; p[1]++) {
+			Vec3f bc_screen = barycentric(ptis[0], ptis[1], ptis[2], p);
+			if (bc_screen[0] < 0 || bc_screen[1] < 0 || bc_screen[2] < 0) continue;
+			/**
+			 * Calculate texture color
+			**/
+			Vec2f uvf = uvs[0] * bc_screen[0] + uvs[1] * bc_screen[1] + uvs[2] * bc_screen[2];
+			TGAColor c = texture->get(int(texture->get_width() * uvf[0] + .5f), int(texture->get_height() * uvf[1] + .5f));
+			mImage->set(p[0], p[1], c);
+		}
+	}
+}
+
 }
