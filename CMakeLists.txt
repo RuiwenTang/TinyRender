@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 
 project(TinyRender)
 
-set(ASSETS_PATH ${PROJECT_SOURCE_DIR}/assets)
+set(ASSETS_PATH "${PROJECT_SOURCE_DIR}/assets")
 
 # config file
 configure_file(
@@ -26,7 +26,7 @@ add_library(tinyRender
     )
 
 
-######## example
+######## example ##########
 add_executable(Triangle example/Triangle.cpp)
 target_link_libraries(Triangle tinyRender)
 
@@ -35,3 +35,6 @@ target_link_libraries(EmptyFrame tinyRender)
 
 add_executable(ColorTriangle example/ColorTriangle.cpp)
 target_link_libraries(ColorTriangle tinyRender)
+
+add_executable(DisplayModel example/DisplayModel.cpp)
+target_link_libraries(DisplayModel tinyRender)

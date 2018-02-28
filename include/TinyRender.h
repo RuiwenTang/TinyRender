@@ -9,9 +9,17 @@ namespace TRM
 class TinyRender
 {
   public:
-    TinyRender(): mImage(nullptr) { }
-	TinyRender(TGAImage* image): mImage(image) { }
-    virtual ~TinyRender() { }
+    TinyRender(): mImage(nullptr), mZbuffer(nullptr), mWidth(0), mHeight(0) { }
+	TinyRender(TGAImage* image): mImage(image),mZbuffer(nullptr), mWidth(0), mHeight(0) {
+        if (mImage != nullptr) {
+            attachBuffer(mImage);
+        }
+    }
+    virtual ~TinyRender() {
+        if (mZbuffer != nullptr) {
+            delete[] mZbuffer;
+        }
+    }
 
     void attachBuffer(TGAImage* image);
     void triangle(const Vec2i& a, const Vec2i& b, const Vec2i& c, const TGAColor& color);
@@ -20,6 +28,9 @@ class TinyRender
 
   protected:
     TGAImage* mImage;
+    float* mZbuffer;
+    int mWidth;
+    int mHeight;
 };
 
 }
