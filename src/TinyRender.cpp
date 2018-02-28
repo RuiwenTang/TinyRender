@@ -71,7 +71,7 @@ void TinyRender::triangle(Vec3f* pts, Vec2f* uvs, TGAImage* texture) {
     float pz;
 	for (p[0] = leftTop[0]; p[0] <= rightBottom[0]; p[0]++) {
 		for (p[1] = leftTop[1]; p[1] <= rightBottom[1]; p[1]++) {
-			Vec3f bc_screen = barycentric(ptis[0], ptis[1], ptis[2], p);
+			Vec3f bc_screen = barycentric(pts[0], pts[1], pts[2], p);
 			if (bc_screen[0] < 0 || bc_screen[1] < 0 || bc_screen[2] < 0) continue;
             pz = pts[0][2] * bc_screen[0] + pts[1][2] * bc_screen[1] * pts[2][2] * bc_screen[2];
 			/**

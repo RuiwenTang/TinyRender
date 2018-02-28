@@ -215,10 +215,11 @@ mat<U, W, T> operator*(const mat<U, V, T>& m1, const mat<V, W, T>& m2) {
     return res;
 }
 
-template <size_t DIM,typename T>
-vec<3, float> barycentric(const vec<DIM, T>& a, const vec<DIM, T>& b, const vec<DIM, T>& c, const vec<DIM, T>& p) {
+    
+template <size_t DIM,typename T, size_t UIM, typename U>
+vec<3, float> barycentric(const vec<DIM, T>& a, const vec<DIM, T>& b, const vec<DIM, T>& c, const vec<UIM, U>& p) {
 	assert(DIM >= 2);
-
+    assert(UIM >= 2);
     vec<3, float> res;
 
 	/*
@@ -232,7 +233,10 @@ vec<3, float> barycentric(const vec<DIM, T>& a, const vec<DIM, T>& b, const vec<
 	*/
 	vec<DIM, T> AC = c - a;
 	vec<DIM, T> AB = b - a;
-	vec<DIM, T> PA = a - p;
+    vec<DIM, T> PA;
+    for(size_t i = 0; i < DIM && i < UIM; i++) {
+        PA[i] = a[i] - static_cast<T>(p[i]);
+    }
 	vec<3, float> v1, v2;
 	
 	v1[0] = AC[0];
