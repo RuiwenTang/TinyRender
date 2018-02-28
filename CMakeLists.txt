@@ -2,10 +2,18 @@ cmake_minimum_required(VERSION 3.6)
 
 project(TinyRender)
 
+set(ASSETS_PATH ${PROJECT_SOURCE_DIR}/assets)
+
+# config file
+configure_file(
+    ${PROJECT_SOURCE_DIR}/config.h.in
+    ${PROJECT_BINARY_DIR}/config.h
+)
 
 set(CMAKE_CXX_STANDARD 11)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${PROJECT_BINARY_DIR})
 
 add_library(tinyRender 
     src/TinyRender.cpp

@@ -1,0 +1,6 @@
+#ifndef TRM_CONFIG_H
+#define TRM_CONFIG_H
+
+#define ASSETS_PATH @ASSETS_PATH@
+
+#endif // TRM_CONFIG_H
