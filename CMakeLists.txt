@@ -26,7 +26,7 @@ add_library(tinyRender
     )
 
 
-######## example
+######## example #########
 add_executable(Triangle example/Triangle.cpp)
 target_link_libraries(Triangle tinyRender)
 
@@ -35,3 +35,6 @@ target_link_libraries(EmptyFrame tinyRender)
 
 add_executable(ColorTriangle example/ColorTriangle.cpp)
 target_link_libraries(ColorTriangle tinyRender)
+
+add_executable(Wireframe example/Wireframe.cpp)
+target_link_libraries(Wireframe tinyRender)

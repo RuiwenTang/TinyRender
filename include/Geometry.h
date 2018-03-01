@@ -258,6 +258,7 @@ vec<3, float> barycentric(const vec<DIM, T>& a, const vec<DIM, T>& b, const vec<
 	return u;
 }
 
+
 template <size_t DIM, typename T>
 void bbox(vec<2, T>& leftTop, vec<2, T>& rightBottom, vec<DIM, T>* pts) {
 	if (pts == nullptr) return;
