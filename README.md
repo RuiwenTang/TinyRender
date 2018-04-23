@@ -35,3 +35,8 @@ for (p[0] = leftTop[0]; p[0] <= rightBottom[0]; p[0]++) {
 And full code is in [ColorTriangle.cpp](./example/ColorTriangle.cpp)
 Result like this:    
 ![ColorTriangle](./screenshoots/colortriangle.png)
+### Load obj format 3D modle
+>A obj format 3D model is just a txt file. With vertex information write in line. So we can use c++ input stream to read and parse a model. In the begin we just draw a white frame model.
+The code is in [Wireframe.cpp](./example/Wireframe.cpp)    
+And render result like is:    
+![whiteframe](./screenshoots/whiteframe.png)
