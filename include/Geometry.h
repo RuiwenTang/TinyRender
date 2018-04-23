@@ -215,6 +215,22 @@ mat<U, W, T> operator*(const mat<U, V, T>& m1, const mat<V, W, T>& m2) {
     return res;
 }
 
+template <typename T>
+vec<3, T> operator^(const vec<3, T>& v1, const vec<3, T>& v2) {
+    vec<3, T> ret;
+    T l = v1[0];
+    T m = v1[1];
+    T n = v1[2];
+    T o = v2[0];
+    T p = v2[1];
+    T q = v2[2];
+
+    ret[0] = (m * q - n * p);
+    ret[1] = (n * o - l * q);
+    ret[2] = (l * p - m * o);
+    return ret;
+};
+
 template <size_t DIM,typename T>
 vec<3, float> barycentric(const vec<DIM, T>& a, const vec<DIM, T>& b, const vec<DIM, T>& c, const vec<DIM, T>& p) {
 	assert(DIM >= 2);

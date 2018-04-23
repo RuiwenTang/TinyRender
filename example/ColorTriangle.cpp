@@ -27,7 +27,7 @@ int main(int argc, const char** argv) {
 	TGAColor colors[] = { RED, GREEN, BLUE };
 	render.triangle(pts, colors);
 
-	image.write_tga_file("framebuffer.tga");
+	image.write_tga_file("colorBuffer.tga");
 
 	return 0;
 }

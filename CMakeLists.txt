@@ -38,3 +38,9 @@ target_link_libraries(ColorTriangle tinyRender)
 
 add_executable(Wireframe example/Wireframe.cpp)
 target_link_libraries(Wireframe tinyRender)
+
+add_executable(RandomColorModel example/RandomColorModel.cpp)
+target_link_libraries(RandomColorModel tinyRender)
+
+add_executable(LightAndFaceCut example/LightAndFaceCut.cpp)
+target_link_libraries(LightAndFaceCut tinyRender)
