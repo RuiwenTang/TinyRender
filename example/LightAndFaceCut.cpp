@@ -34,7 +34,7 @@ int main(int argc, const char** argv) {
     Vec3f light_dir;
     light_dir[0] = 0;
     light_dir[1] = 0;
-    light_dir[2] = 1.f;
+    light_dir[2] = -1.f;
     
     /** draw all vertex triangle ***/
     for (size_t i = 0; i < model.nfaces(); i++) {
@@ -50,7 +50,7 @@ int main(int argc, const char** argv) {
             triangle[j][1] = (int)c[1];
             
         }
-        Vec3f normal = ((vectors[0] - vectors[2])^(vectors[2] - vectors[1])).normalize();
+        Vec3f normal = ((vectors[2] - vectors[0])^(vectors[1] - vectors[0])).normalize();
         
         float indensity = normal * light_dir;
         

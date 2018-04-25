@@ -2,3 +2,4 @@
 build
 buildXcode
 .vscode
+config.h

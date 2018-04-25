@@ -31,7 +31,7 @@ int main(int argc, const char** argv) {
         for(size_t j = 0; j < 3; j++) {
             Vec3f c = model.vert(face[j]);
             c[0] = (c[0] + 1.f) * WIDTH / 2.f;
-            c[1] = (c[1] + 1.f) * WIDTH / 2.f;
+            c[1] = (c[1] + 1.f) * HEIGHT / 2.f;
             triangle[j] = c;
         }
         render.line(triangle[0][0], triangle[0][1], triangle[1][0], triangle[1][1], WHITE);

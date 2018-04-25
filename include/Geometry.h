@@ -10,294 +10,367 @@
 namespace TRM
 {
 
+template <size_t DimCols, size_t DimRows, typename T>
+class mat;
+
 template <size_t DIM, typename T>
-class vec
+struct vec
 {
-  public:
     vec()
     {
-        for (size_t i = 0; i < DIM; i++)
-            data[i] = static_cast<T>(0);
+        for (size_t i = DIM; i--; data_[i] = T())
+            ;
     }
-
-    vec(const vec<DIM, T> &v1)
+    T &operator[](const size_t i)
     {
-        for (size_t i = 0; i < DIM; i++)
-            data[i] = v1[i];
+        assert(i < DIM);
+        return data_[i];
     }
-
-    virtual ~vec() {}
-
-    template <size_t COL>
-    vec(const vec<COL, T> &v1)
+    const T &operator[](const size_t i) const
     {
-        size_t max = std::min(DIM, COL);
-        for (size_t i = 0; i < max; i++)
-            data[i] = v1[i];
+        assert(i < DIM);
+        return data_[i];
     }
 
-    T &operator[](size_t index)
-    {
-        assert(index < DIM);
-        return data[index];
-    }
-
-    const T &operator[](size_t index) const
-    {
-        assert(index < DIM);
-        return data[index];
-    }
-
-    const vec<DIM, T> &operator=(const vec<DIM, T> &v1)
-    {
-        for (size_t i = 0; i < DIM; i++)
-            data[i] = v1[i];
-        return *this;
-    }
-
-    T norm() {
-        T res(0);
-        for(size_t i = 0; i < DIM; i++) {
-            res += data[i] * data[i];
-        }
-        return std::sqrt(res);
-    }
-
-    vec<DIM, T>& normalize() {
-        *this = (*this)*(static_cast<T>(1) /norm());
-        return *this;
-    }
-
-  protected:
-    T data[DIM];
+  private:
+    T data_[DIM];
 };
 
-template <size_t ROW, size_t COL, typename T>
-class mat
+/////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+struct vec<2, T>
 {
-  public:
-    mat() {}
-    mat(const mat<ROW, COL, T>& m1) {
-        for(size_t i = 0; i < ROW; i++) {
-            for(size_t j = 0; j < COL; j++){
-                data[i][j] = m1[i][j];
-            }
-        }
+    vec() : x(T()), y(T()) {}
+    vec(T X, T Y) : x(X), y(Y) {}
+    template <class U>
+    vec<2, T>(const vec<2, U> &v);
+    T &operator[](const size_t i)
+    {
+        assert(i < 2);
+        return i <= 0 ? x : y;
+    }
+    const T &operator[](const size_t i) const
+    {
+        assert(i < 2);
+        return i <= 0 ? x : y;
     }
 
-    ~mat() {}
+    T x, y;
+};
 
-    void identity() {
-        for(size_t i = 0; i < ROW; i++)
-            for(size_t j = 0; j < COL; j++)
-                if (i == j) data[i][j] = static_cast<T>(1);
+/////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+struct vec<3, T>
+{
+    vec() : x(T()), y(T()), z(T()) {}
+    vec(T X, T Y, T Z) : x(X), y(Y), z(Z) {}
+    template <class U>
+    vec<3, T>(const vec<3, U> &v);
+    T &operator[](const size_t i)
+    {
+        assert(i < 3);
+        return i <= 0 ? x : (1 == i ? y : z);
     }
-
-    vec<COL, T>& operator[](const size_t index) {
-        return data[index];
+    const T &operator[](const size_t i) const
+    {
+        assert(i < 3);
+        return i <= 0 ? x : (1 == i ? y : z);
     }
-
-    const vec<COL, T>& operator[](const size_t index) const {
-        return data[index];
-    }
-
-    const mat<ROW, COL, T>& operator=(const mat<ROW, COL, T>& m1) {
-        for(size_t i = 0; i < ROW; i++) {
-            for(size_t j = 0; j < COL; j++){
-                data[i][j] = m1[i][j];
-            }
-        }
+    float norm() { return std::sqrt(x * x + y * y + z * z); }
+    vec<3, T> &normalize(T l = 1)
+    {
+        *this = (*this) * (l / norm());
         return *this;
     }
 
-  protected:
-    vec<COL, T> data[ROW];
+    vec<3, T> &operator^(const vec<3, T> &v)
+    {
+        T l = x;
+        T m = y;
+        T n = z;
+        T o = v.x;
+        T p = v.y;
+        T q = v.z;
+        x = (m * q - n * p);
+        y = (n * o - l * q);
+        z = (l * p - m * o);
+        return *this;
+    }
+
+    T x, y, z;
 };
 
-template <size_t U, typename V>
-vec<U, V> operator+(const vec<U, V>& v1, const vec<U, V>& v2) {
-	vec<U, V> res;
+/////////////////////////////////////////////////////////////////////////////////
 
-	for (size_t i = 0; i < U; i++) {
-		res[i] = v1[i] + v2[i];
-	}
-
-	return res;
-}
-
-template <size_t U, typename V>
-vec<U, V> operator-(const vec<U, V>& v1, const vec<U, V>& v2) {
-	vec<U, V> res;
-
-	for (size_t i = 0; i < U; i++) {
-		res[i] = v1[i] - v2[i];
-	}
-
-	return res;
-}
-
-template <size_t U, typename V>
-V operator*(const vec<U, V> &v1, const vec<U, V> &v2)
+template <size_t DIM, typename T>
+T operator*(const vec<DIM, T> &lhs, const vec<DIM, T> &rhs)
 {
-    V res(0);
-
-    for (size_t i = 0; i < U; i++)
-        res += v1[i] * v2[i];
-
-    return res;
+    T ret = T();
+    for (size_t i = DIM; i--; ret += lhs[i] * rhs[i])
+        ;
+    return ret;
 }
 
-template <size_t U, typename V>
-vec<U, V> operator*(const vec<U, V> &v1, V n)
+template <size_t DIM, typename T>
+vec<DIM, T> operator+(vec<DIM, T> lhs, const vec<DIM, T> &rhs)
 {
-    vec<U, V> res;
-    for (size_t i = 0; i < U; i++)
-        res[i] = v1[i] * n;
-    return res;
+    for (size_t i = DIM; i--; lhs[i] += rhs[i])
+        ;
+    return lhs;
 }
 
-template <size_t U, typename V>
-vec<U, V> operator*(V n, const vec<U, V> &v1)
+template <size_t DIM, typename T>
+vec<DIM, T> operator-(vec<DIM, T> lhs, const vec<DIM, T> &rhs)
 {
-    vec<U, V> res;
-    for (size_t i = 0; i < U; i++)
-        res[i] = v1[i] * n;
-    return res;
+    for (size_t i = DIM; i--; lhs[i] -= rhs[i])
+        ;
+    return lhs;
 }
 
-
-template <size_t ROW, size_t COL, typename T>
-vec<COL, T> operator* (const mat<ROW, COL, T>& m1, const vec<COL, T>& v1)
+template <size_t DIM, typename T, typename U>
+vec<DIM, T> operator*(vec<DIM, T> lhs, const U &rhs)
 {
-    vec<COL, T> res;
-
-    for(size_t j = 0; j < COL; j++) {
-        for(size_t i = 0; i < ROW; i++) {
-            res[j] += m1[j][i] * v1[i];
-        }
-    }
-    
-    return res;
+    for (size_t i = DIM; i--; lhs[i] *= rhs)
+        ;
+    return lhs;
 }
 
-template <size_t ROW, size_t COL, typename T>
-vec<COL, T> operator* (const vec<ROW, T>& v1, const mat<ROW, COL, T>& m1) {
-    vec<COL, T> res;
-    for(size_t i = 0; i < COL; i++) {
-        for(size_t j = 0; j < ROW; j++) {
-            res[i] += v1[j] * m1[j][i];
-        }
-    }
-
-    return res;
+template <size_t DIM, typename T, typename U>
+vec<DIM, T> operator/(vec<DIM, T> lhs, const U &rhs)
+{
+    for (size_t i = DIM; i--; lhs[i] /= rhs)
+        ;
+    return lhs;
 }
 
-template<typename T>
-vec<3, T> cross(const vec<3, T>& v1, const vec<3, T>& v2) {
-    vec<3, T> res;
-    res[0] = v1[1] * v2[2] - v1[2] * v2[1];
-    res[1] = v1[2] * v2[0] - v1[0] * v2[2];
-    res[2] = v1[0] * v2[1] - v1[1] * v2[0];
-    return res;
+template <size_t LEN, size_t DIM, typename T>
+vec<LEN, T> embed(const vec<DIM, T> &v, T fill = 1)
+{
+    vec<LEN, T> ret;
+    for (size_t i = LEN; i--; ret[i] = (i < DIM ? v[i] : fill))
+        ;
+    return ret;
 }
 
-template <size_t U, size_t V, size_t W, typename T>
-mat<U, W, T> operator*(const mat<U, V, T>& m1, const mat<V, W, T>& m2) {
-    mat<U, W, T> res;
-    for(size_t i = 0; i < U; i++) {
-        for(size_t j = 0; j < V; j++) {
-            for(size_t k = 0; k < W; k++) {
-                res[i][j] += m1[i][k] * m2[k][j];
-            }
-        }
-    }
-
-    return res;
+template <size_t LEN, size_t DIM, typename T>
+vec<LEN, T> proj(const vec<DIM, T> &v)
+{
+    vec<LEN, T> ret;
+    for (size_t i = LEN; i--; ret[i] = v[i])
+        ;
+    return ret;
 }
 
 template <typename T>
-vec<3, T> operator^(const vec<3, T>& v1, const vec<3, T>& v2) {
-    vec<3, T> ret;
-    T l = v1[0];
-    T m = v1[1];
-    T n = v1[2];
-    T o = v2[0];
-    T p = v2[1];
-    T q = v2[2];
-
-    ret[0] = (m * q - n * p);
-    ret[1] = (n * o - l * q);
-    ret[2] = (l * p - m * o);
-    return ret;
-};
-
-template <size_t DIM,typename T>
-vec<3, float> barycentric(const vec<DIM, T>& a, const vec<DIM, T>& b, const vec<DIM, T>& c, const vec<DIM, T>& p) {
-	assert(DIM >= 2);
-
-    vec<3, float> res;
-
-	/*
-		P = (1 - u - v) x A + u x B + v x C 
-	    AP = u x AC + v x AB 
-		u x AC + v x AB + PA = 0
-		u x (c - a) + v x (b - a) + (a - p) = 0
-
-		| u x (c - a)[0] + v x (b - a)[0] + (a - p)[0] = 0
-		| u x (c - a)[1] + v x (b - a)[1] + (a - p)[1] = 0
-	*/
-	vec<DIM, T> AC = c - a;
-	vec<DIM, T> AB = b - a;
-	vec<DIM, T> PA = a - p;
-	vec<3, float> v1, v2;
-	
-	v1[0] = AC[0];
-	v1[1] = AB[0];
-	v1[2] = PA[0];
-
-	v2[0] = AC[1];
-	v2[1] = AB[1];
-	v2[2] = PA[1];
-
-	res = cross(v1, v2);
-	vec<3, float> u;
-	if (std::abs(res[2] > 1e-2)) {
-		u[0] = 1.f - (float)(res[0] + res[1]) / float(res[2]);
-		u[1] = float(res[1]) / float(res[2]);
-		u[2] = float(res[0]) / float(res[2]);
-	}
-	else {
-		u[0] = -1.f;
-		u[1] = -1.f;
-		u[2] = -1.f;
-	}
-	return u;
+vec<3, T> cross(vec<3, T> v1, vec<3, T> v2)
+{
+    return vec<3, T>(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
 }
-
 
 template <size_t DIM, typename T>
-void bbox(vec<2, T>& leftTop, vec<2, T>& rightBottom, vec<DIM, T>* pts) {
-	if (pts == nullptr) return;
-
-	leftTop[0] = std::numeric_limits<T>::max();
-	leftTop[1] = std::numeric_limits<T>::max();
-
-	rightBottom[0] = -std::numeric_limits<T>::max();
-	rightBottom[1] = -std::numeric_limits<T>::max();
-
-	for (size_t i = 0; i < 3; i++) {
-		for (size_t j = 0; j < 2; j++) {
-			leftTop[j] = std::max(static_cast<T>(0), std::min(leftTop[j], pts[i][j]));
-			rightBottom[j] = std::min(std::numeric_limits<T>::max(), std::max(rightBottom[j], pts[i][j]));
-		}
-	}
+std::ostream &operator<<(std::ostream &out, vec<DIM, T> &v)
+{
+    for (unsigned int i = 0; i < DIM; i++)
+    {
+        out << v[i] << " ";
+    }
+    return out;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+
+template <size_t DIM, typename T>
+struct dt
+{
+    static T det(const mat<DIM, DIM, T> &src)
+    {
+        T ret = 0;
+        for (size_t i = DIM; i--; ret += src[0][i] * src.cofactor(0, i))
+            ;
+        return ret;
+    }
+};
+
+template <typename T>
+struct dt<1, T>
+{
+    static T det(const mat<1, 1, T> &src)
+    {
+        return src[0][0];
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+
+template <size_t DimRows, size_t DimCols, typename T>
+class mat
+{
+protected:
+    vec<DimCols, T> rows[DimRows];
+
+public:
+    mat() {}
+
+    vec<DimCols, T> &operator[](const size_t idx)
+    {
+        assert(idx < DimRows);
+        return rows[idx];
+    }
+
+    const vec<DimCols, T> &operator[](const size_t idx) const
+    {
+        assert(idx < DimRows);
+        return rows[idx];
+    }
+
+    vec<DimRows, T> col(const size_t idx) const
+    {
+        assert(idx < DimCols);
+        vec<DimRows, T> ret;
+        for (size_t i = DimRows; i--; ret[i] = rows[i][idx])
+            ;
+        return ret;
+    }
+
+    void set_col(size_t idx, vec<DimRows, T> v)
+    {
+        assert(idx < DimCols);
+        for (size_t i = DimRows; i--; rows[i][idx] = v[i])
+            ;
+    }
+
+    static mat<DimRows, DimCols, T> identity()
+    {
+        mat<DimRows, DimCols, T> ret;
+        for (size_t i = DimRows; i--;)
+            for (size_t j = DimCols; j--; ret[i][j] = (i == j))
+                ;
+        return ret;
+    }
+
+    T det() const
+    {
+        return dt<DimCols, T>::det(*this);
+    }
+
+    mat<DimRows - 1, DimCols - 1, T> get_minor(size_t row, size_t col) const
+    {
+        mat<DimRows - 1, DimCols - 1, T> ret;
+        for (size_t i = DimRows - 1; i--;)
+            for (size_t j = DimCols - 1; j--; ret[i][j] = rows[i < row ? i : i + 1][j < col ? j : j + 1])
+                ;
+        return ret;
+    }
+
+    T cofactor(size_t row, size_t col) const
+    {
+        return get_minor(row, col).det() * ((row + col) % 2 ? -1 : 1);
+    }
+
+    mat<DimRows, DimCols, T> adjugate() const
+    {
+        mat<DimRows, DimCols, T> ret;
+        for (size_t i = DimRows; i--;)
+            for (size_t j = DimCols; j--; ret[i][j] = cofactor(i, j))
+                ;
+        return ret;
+    }
+
+    mat<DimRows, DimCols, T> invert_transpose()
+    {
+        mat<DimRows, DimCols, T> ret = adjugate();
+        T tmp = ret[0] * rows[0];
+        return ret / tmp;
+    }
+
+    mat<DimRows, DimCols, T> invert()
+    {
+        return invert_transpose().transpose();
+    }
+
+    mat<DimCols, DimRows, T> transpose()
+    {
+        mat<DimCols, DimRows, T> ret;
+        for (size_t i = DimCols; i--; ret[i] = this->col(i))
+            ;
+        return ret;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+
+template <size_t DimRows, size_t DimCols, typename T>
+vec<DimRows, T> operator*(const mat<DimRows, DimCols, T> &lhs, const vec<DimCols, T> &rhs)
+{
+    vec<DimRows, T> ret;
+    for (size_t i = DimRows; i--; ret[i] = lhs[i] * rhs)
+        ;
+    return ret;
+}
+
+template <size_t R1, size_t C1, size_t C2, typename T>
+mat<R1, C2, T> operator*(const mat<R1, C1, T> &lhs, const mat<C1, C2, T> &rhs)
+{
+    mat<R1, C2, T> result;
+    for (size_t i = R1; i--;)
+        for (size_t j = C2; j--; result[i][j] = lhs[i] * rhs.col(j))
+            ;
+    return result;
+}
+
+template <size_t DimRows, size_t DimCols, typename T>
+mat<DimCols, DimRows, T> operator/(mat<DimRows, DimCols, T> lhs, const T &rhs)
+{
+    for (size_t i = DimRows; i--; lhs[i] = lhs[i] / rhs)
+        ;
+    return lhs;
+}
+
+template <size_t DimRows, size_t DimCols, class T>
+std::ostream &operator<<(std::ostream &out, mat<DimRows, DimCols, T> &m)
+{
+    for (size_t i = 0; i < DimRows; i++)
+        out << m[i] << std::endl;
+    return out;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
 typedef vec<2, float> Vec2f;
-typedef vec<3, float> Vec3f;
-typedef vec<4, float> Vec4f;
 typedef vec<2, int> Vec2i;
+typedef vec<3, float> Vec3f;
 typedef vec<3, int> Vec3i;
-typedef vec<4, int> Vec4i;
-typedef mat<4, 4, float> Mat44;
+typedef vec<4, float> Vec4f;
+typedef mat<4, 4, float> Matrix;
+
+///////////////////////////////////////////////////////////////////////////////////
+
+template <size_t DimRows>
+Vec3f barycentric(vec<DimRows, float> A, vec<DimRows, float> B, vec<DimRows, float> C, vec<DimRows, float> P)
+{
+    if (DimRows < 2)
+    {
+        return Vec3f(1., 1., 1.);
+    }
+    else
+    {
+        Vec3f s[2];
+        for(int i = 0; i < 2; i++) {
+            s[i][0] = C[i] - A[i];
+            s[i][1] = B[i] - A[i];
+            s[i][2] = A[i] - P[i];
+        }
+        Vec3f u = cross(s[0], s[1]);
+        if (std::abs(u[2]) > 1e-2) // dont forget that u[2] is integer. If it is zero then triangle ABC is degenerate
+            return Vec3f(1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
+        return Vec3f(-1, 1, 1); // in this case generate negative coordinates, it will be thrown away by the rasterizator
+    }
+}
+
+Matrix lookAt(Vec3f eye, Vec3f look, Vec3f up);
+Matrix perspective(float fovy, float aspect, float near, float far);
+
+
 }

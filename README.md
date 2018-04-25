@@ -35,8 +35,33 @@ for (p[0] = leftTop[0]; p[0] <= rightBottom[0]; p[0]++) {
 And full code is in [ColorTriangle.cpp](./example/ColorTriangle.cpp)
 Result like this:    
 ![ColorTriangle](./screenshoots/colortriangle.png)
-### Load obj format 3D modle
->A obj format 3D model is just a txt file. With vertex information write in line. So we can use c++ input stream to read and parse a model. In the begin we just draw a white frame model.
+### Load obj format 3D model
+>A obj format 3D model is just a txt file. With vertex information write in line. So we can use c++ input stream to read and parse a model. In the begining we just draw a white frame model.
 The code is in [Wireframe.cpp](./example/Wireframe.cpp)    
-And render result like is:    
+And render result is:    
 ![whiteframe](./screenshoots/whiteframe.png)
+### Draw 3D model faces
+> When drawing 3D model, it's actually drawing triangles. Many small traingles togethor can make a smooth surface. For Simplicity, we use random color to render model triangle.
+
+The code segment like this:    
+```c++
+Model model(model_path.c_str());
+/** draw all vertex triangle ***/
+for (size_t i = 0; i < model.nfaces(); i++) {
+    std::vector<int> face = model.face(i);
+    Vec2i triangle[3];
+    for(size_t j = 0; j < 3; j++) {
+        Vec3f c = model.vert(face[j]);
+        c[0] = (c[0] + 1.f) * WIDTH / 2.f;
+        c[1] = (c[1] + 1.f) * HEIGHT / 2.f;
+        triangle[j][0] = (int)c[0];
+        triangle[j][1] = (int)c[1];
+    }
+    TGAColor randomColor(rand() % 255, rand() % 255, rand() % 255);
+    TGAColor colors[] = { randomColor, randomColor, randomColor };
+    render.triangle(triangle, colors);
+}
+```
+Full code is in [RandomColorModel.cpp](./example/RandomColorModel.cpp)    
+And render result is:    
+![RandomColorFrame](./screenshoots/randomcolorframe.png)

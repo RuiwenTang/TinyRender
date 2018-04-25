@@ -2,16 +2,7 @@
 
 namespace TRM {
 
-    
-vec<3, float> barycentric(const vec<3, float>& a, const vec<3, float>& b, const vec<3, float>& c, const vec<2, int>& p) {
 
-    vec<3, float> temp;
-    temp[0] = float(p[0]);
-    temp[1] = float(p[1]);
-        
-    return barycentric(a, b, c, temp);
-}
-    
 void TinyRender::attachBuffer(TGAImage* image) {
     mImage = image;
     if (mImage != nullptr && mImage->get_width() > 0 && mImage->get_height() > 0) {
@@ -24,7 +15,7 @@ void TinyRender::attachBuffer(TGAImage* image) {
         int height = mImage->get_height();
         mZBuffer = new float[width * height];
         for(size_t i = 0; i < width * height; i++) {
-            mZBuffer[i] = -std::numeric_limits<float>::max();
+            mZBuffer[i] = std::numeric_limits<float>::max();
         }
     }
 }
@@ -61,14 +52,22 @@ void TinyRender::attachBuffer(TGAImage* image) {
 
 
 void TinyRender::triangle(const Vec2i& a, const Vec2i& b, const Vec2i& c, const TGAColor& color) {
-	Vec2i leftTop, rightBottom;
 	Vec2i pts[] = { a, b, c };
-	bbox(leftTop, rightBottom, pts);
+	
+    Vec2i bboxmin(this->mImage->get_width() - 1, this->mImage->get_height() - 1);
+    Vec2i bboxmax(0, 0);
+    Vec2i clamp(this->mImage->get_width() - 1, this->mImage->get_height() - 1);
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 2; j++) {
+            bboxmin[j] = std::max(0, std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
+    }
 
 	Vec2i p;
-	for (p[0] = leftTop[0]; p[0] <= rightBottom[0]; p[0]++) {
-		for (p[1] = leftTop[1]; p[1] <= rightBottom[1]; p[1]++) {
-			Vec3f bc_screen = barycentric(a, b, c, p);
+	for (p[0] = bboxmin.x; p[0] <= bboxmax.x; p[0]++) {
+		for (p[1] = bboxmin.y; p[1] <= bboxmax.y; p[1]++) {
+			Vec3f bc_screen = barycentric<2>(a, b, c, p);
 			if (bc_screen[0] < 0 || bc_screen[1] < 0 || bc_screen[2] < 0) continue;
 
 			mImage->set(p[0], p[1], color);
@@ -77,16 +76,23 @@ void TinyRender::triangle(const Vec2i& a, const Vec2i& b, const Vec2i& c, const 
 }
 
 void TinyRender::triangle(Vec2i* pts, TGAColor* colors) {
-	Vec2i leftTop, rightBottom;
 
-	bbox(leftTop, rightBottom, pts);
+	Vec2i bboxmin(this->mImage->get_width() - 1, this->mImage->get_height() - 1);
+    Vec2i bboxmax(0, 0);
+    Vec2i clamp(this->mImage->get_width() - 1, this->mImage->get_height() - 1);
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 2; j++) {
+            bboxmin[j] = std::max(0, std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
+    }
     
     int width = mImage->get_width();
 
 	Vec2i p;
-	for (p[0] = leftTop[0]; p[0] <= rightBottom[0]; p[0]++) {
-		for (p[1] = leftTop[1]; p[1] <= rightBottom[1]; p[1]++) {
-			Vec3f bc_screen = barycentric(pts[0], pts[1], pts[2], p);
+	for (p[0] = bboxmin.x; p[0] <= bboxmax.x; p[0]++) {
+		for (p[1] = bboxmin.y; p[1] <= bboxmax.y; p[1]++) {
+			Vec3f bc_screen = barycentric<2>(pts[0], pts[1], pts[2], p);
 			if (bc_screen[0] < 0 || bc_screen[1] < 0 || bc_screen[2] < 0) continue;
 			TGAColor c;
 			/*
@@ -101,7 +107,6 @@ void TinyRender::triangle(Vec2i* pts, TGAColor* colors) {
 }
 
 void TinyRender::triangle(Vec3f *pts, TGAColor *colors) {
-    Vec2i leftTop, rightBottom;
 
     int width = mImage->get_width();
 
@@ -111,20 +116,28 @@ void TinyRender::triangle(Vec3f *pts, TGAColor *colors) {
         ptis[i][1] = int(pts[i][1] + .5f);
     }
 
-    bbox(leftTop, rightBottom, ptis);
+    Vec2f bboxmin(this->mImage->get_width() - 1, this->mImage->get_height() - 1);
+    Vec2f bboxmax(0, 0);
+    Vec2f clamp(this->mImage->get_width() - 1, this->mImage->get_height() - 1);
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 2; j++) {
+            bboxmin[j] = std::max(0.f, std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
+    }
 
-    Vec2i p;
-    for (p[0] = leftTop[0]; p[0] <= rightBottom[0]; p[0]++) {
-        for (p[1] = leftTop[1]; p[1] <= rightBottom[1]; p[1]++) {
-            Vec3f bc_screen = barycentric(pts[0], pts[1], pts[2], p);
+    Vec3f p;
+    for (p[0] = bboxmin.x; p[0] <= bboxmax.x; p[0]++) {
+        for (p[1] = bboxmin.y; p[1] <= bboxmax.y; p[1]++) {
+            Vec3f bc_screen = barycentric<3>(pts[0], pts[1], pts[2], p);
             if (bc_screen[0] < 0 || bc_screen[1] < 0 || bc_screen[2] < 0) continue;
 
             float pz = pts[0][2] * bc_screen[0] + pts[1][2] * bc_screen[1] + pts[2][2] * bc_screen[2];
 
-            if (mZBuffer[ p[1] * width + p[0] ] > pz) continue;
+            if (mZBuffer[ int(p.x + p.y * mImage->get_width()) ] > pz) continue;
 
 
-            mZBuffer[ p[1] * width + p[0] ] = pz;
+            mZBuffer[ int(p.x + p.y * mImage->get_width()) ] = pz;
 
             TGAColor c;
             /*
@@ -141,8 +154,7 @@ void TinyRender::triangle(Vec3f *pts, TGAColor *colors) {
 }
 
 void TinyRender::triangle(Vec3f* pts, Vec2f* uvs, TGAImage* texture) {
-	Vec2i leftTop, rightBottom;
-    
+
     int width = mImage->get_width();
     
 	Vec2i ptis[3];
@@ -151,20 +163,28 @@ void TinyRender::triangle(Vec3f* pts, Vec2f* uvs, TGAImage* texture) {
 		ptis[i][1] = int(pts[i][1] + .5f);
 	}
 
-	bbox(leftTop, rightBottom, ptis);
+	Vec2f bboxmin(this->mImage->get_width() - 1, this->mImage->get_height() - 1);
+    Vec2f bboxmax(0, 0);
+    Vec2f clamp(this->mImage->get_width() - 1, this->mImage->get_height() - 1);
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 2; j++) {
+            bboxmin[j] = std::max(0.f, std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
+    }
 
-	Vec2i p;
-	for (p[0] = leftTop[0]; p[0] <= rightBottom[0]; p[0]++) {
-		for (p[1] = leftTop[1]; p[1] <= rightBottom[1]; p[1]++) {
-			Vec3f bc_screen = barycentric(pts[0], pts[1], pts[2], p);
+	Vec3f p;
+	for (p[0] = bboxmin.x; p[0] <= bboxmax.x; p[0]++) {
+		for (p[1] = bboxmin.y; p[1] <= bboxmax.y; p[1]++) {
+			Vec3f bc_screen = barycentric<3>(pts[0], pts[1], pts[2], p);
 			if (bc_screen[0] < 0 || bc_screen[1] < 0 || bc_screen[2] < 0) continue;
             
             float pz = pts[0][2] * bc_screen[0] + pts[1][2] * bc_screen[1] + pts[2][2] * bc_screen[2];
             
-            if (mZBuffer[ p[1] * width + p[0] ] > pz) continue;
+            if (mZBuffer[ int(p.x + p.y * mImage->get_width()) ] > pz) continue;
             
             
-            mZBuffer[ p[1] * width + p[0] ] = pz;
+            mZBuffer[ int(p.x + p.y * mImage->get_width()) ] = pz;
 			/**
 			 * Calculate texture color
 			**/

@@ -35,15 +35,15 @@ int main(int argc, const char** argv) {
         for(size_t j = 0; j < 3; j++) {
             Vec3f c = model.vert(face[j]);
             c[0] = (c[0] + 1.f) * WIDTH / 2.f;
-            c[1] = (c[1] + 1.f) * WIDTH / 2.f;
+            c[1] = (c[1] + 1.f) * HEIGHT / 2.f;
             triangle[j][0] = (int)c[0];
             triangle[j][1] = (int)c[1];
         }
-        TGAColor randomColor(dis(gen), dis(gen), dis(gen));
+        TGAColor randomColor(rand() % 255, rand() % 255, rand() % 255);
         TGAColor colors[] = { randomColor, randomColor, randomColor };
         render.triangle(triangle, colors);
     }
-    
+
     framebuffer.flip_vertically();
     framebuffer.write_tga_file("framebuffer.tga");
     
