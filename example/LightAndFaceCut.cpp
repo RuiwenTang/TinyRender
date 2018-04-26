@@ -24,10 +24,7 @@ int main(int argc, const char** argv) {
     render.attachBuffer(&framebuffer);
     
     std::string model_path = ASSETS_ROOT + "/african_head.obj";
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dis(128, 255);
+
     
     Model model(model_path.c_str());
     

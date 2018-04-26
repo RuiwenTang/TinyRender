@@ -65,3 +65,47 @@ for (size_t i = 0; i < model.nfaces(); i++) {
 Full code is in [RandomColorModel.cpp](./example/RandomColorModel.cpp)    
 And render result is:    
 ![RandomColorFrame](./screenshoots/randomcolorframe.png)
+
+### Light effect and depth buffer
+> In previous demo, the image can see the contour of the model. But the render result is looking strange. The reason is some front triangles blocked by other triangles. To fix this error, we need an other buffer to store the depth of each pixle. And every time we draw a new pixle color, we need to check if the `z` value is bigger than the previous one.
+
+So we create a `depth buffer` like this:    
+```c++
+mZBuffer = new float[width * height];
+for(size_t i = 0; i < width * height; i++) {
+    mZBuffer[i] = -std::numeric_limits<float>::max();
+}
+```
+And do the `depth test` like this:    
+```c++
+if (mZBuffer[ int(p.x + p.y * mImage->get_width()) ] > pz) continue;
+```
+Now let's deal with the light effect:    
+Basicly we only calculate the specular reflection result. And the color value is simple multiply the cosin value between light direction and face normal direction like this:    
+![specular reflection](./screenshoots/lightrefrect.gif)    
+
+So the render code segment is like this:    
+```c++
+Vec3f light_dir;
+light_dir[0] = 0;
+light_dir[1] = 0;
+light_dir[2] = -1.f;
+
+...
+
+Vec3f normal = ((vectors[2] - vectors[0])^(vectors[1] - vectors[0])).normalize();        
+float indensity = normal * light_dir;
+
+...
+
+float indensity = normal * light_dir;
+        
+if (indensity > 0) {
+    TGAColor color(255 * indensity, 255 * indensity, 255 * indensity);
+    TGAColor colors[] = { color, color, color };
+    render.triangle(triangle[0], triangle[1], triangle[2], color);
+}
+
+```
+And the render result me like this:    
+![Light and Depth](./screenshoots/lightanddepth.png)
