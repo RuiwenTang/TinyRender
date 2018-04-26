@@ -45,3 +45,6 @@ target_link_libraries(RandomColorModel tinyRender)
 
 add_executable(LightAndFaceCut example/LightAndFaceCut.cpp)
 target_link_libraries(LightAndFaceCut tinyRender)
+
+add_executable(ModelTexture example/ModelTexture.cpp)
+target_link_libraries(ModelTexture tinyRender)
