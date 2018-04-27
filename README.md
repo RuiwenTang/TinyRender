@@ -1,5 +1,4 @@
 # TinyRender
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 > A project to learn how OpenGL Works.    
 >Use TGA Image to hold render result, so not depend on any platform Window system.
 ### BasicTriangle Render Algrithom
@@ -7,29 +6,7 @@
 The algrithom is like this:    
 
 For three point `A` `B` and `C` with an other point `P`, there is the following geometric relations:    
-$$
-\begin{cases}
-\vec{AP} = u \cdot \vec{AB} + v \cdot \vec{AC}\\
-\vec{AP} = P - A\\
-\vec{AB} = B - A\\
-\vec{AC} = C - A
-\end{cases}
-\Rightarrow
-\begin{cases}
-u \cdot(C - A) + v \cdot(B - A) + (A - P) = 0\\
-\end{cases}
-\Rightarrow
-\begin{bmatrix}
-    u & v & 1
-\end{bmatrix}
-\cdot
-\begin{bmatrix}
-    C - A\\
-    B - A\\
-    A - P\\
-\end{bmatrix}
-= 0
-$$
+![TriangleAlgrithom](./screenshoots/TriangleAlgrithom.png)
 
 
 the full code is in [Triangle.cpp](./example/Triangle.cpp)    
