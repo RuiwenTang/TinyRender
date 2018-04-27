@@ -1,20 +1,37 @@
 # TinyRender
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 > A project to learn how OpenGL Works.    
 >Use TGA Image to hold render result, so not depend on any platform Window system.
 ### BasicTriangle Render Algrithom
 . Use Triangle center of gravity to decided whether a pixle is inside a Triangle.
-The algrithom is like this:
-```c++
-/*
-P = (1 - u - v) x A + u x B + v x C 
-AP = u x AC + v x AB 
-u x AC + v x AB + PA = 0
-u x (c - a) + v x (b - a) + (a - p) = 0
+The algrithom is like this:    
 
-| u x (c - a)[0] + v x (b - a)[0] + (a - p)[0] = 0
-| u x (c - a)[1] + v x (b - a)[1] + (a - p)[1] = 0
-*/
-```
+For three point `A` `B` and `C` with an other point `P`, there is the following geometric relations:    
+$$
+\begin{cases}
+\vec{AP} = u \cdot \vec{AB} + v \cdot \vec{AC}\\
+\vec{AP} = P - A\\
+\vec{AB} = B - A\\
+\vec{AC} = C - A
+\end{cases}
+\Rightarrow
+\begin{cases}
+u \cdot(C - A) + v \cdot(B - A) + (A - P) = 0\\
+\end{cases}
+\Rightarrow
+\begin{bmatrix}
+    u & v & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+    C - A\\
+    B - A\\
+    A - P\\
+\end{bmatrix}
+= 0
+$$
+
+
 the full code is in [Triangle.cpp](./example/Triangle.cpp)    
 Result like this:    
 ![BasicTriangle](./screenshoots/basictriangle.png)
@@ -109,3 +126,5 @@ if (indensity > 0) {
 ```
 And the render result me like this:    
 ![Light and Depth](./screenshoots/lightanddepth.png)
+
+### View Matrix
