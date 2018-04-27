@@ -33,6 +33,22 @@ int main(int argc, const char** argv) {
     texture.read_tga_file(texture_path.c_str());
     texture.flip_vertically();
 
+    Vec3f eye;
+    eye[0] = 2.f;
+    eye[1] = 2.f;
+    eye[2] = 2.f;
+
+    Vec3f center;
+    center[0] = 0.f;
+    center[1] = 0.f;
+    center[2] = 0.f;
+    TRM::Vec3f up;
+    up[0] = 0.0f;
+    up[1] = 1.f;
+    up[2] = 0.f;
+
+    Matrix viewMatrix = lookAt(eye, center, up);
+
     /** draw all vertex triangle ***/
     for (size_t i = 0; i < model.nfaces(); i++) {
         std::vector<int> face = model.face(i);
@@ -40,6 +56,16 @@ int main(int argc, const char** argv) {
         Vec3f vectors[3];
         for(size_t j = 0; j < 3; j++) {
             Vec3f c = model.vert(face[j]);
+            Vec4f cp;
+            cp[0] = c[0];
+            cp[1] = c[1];
+            cp[2] = c[2];
+            cp[3] = 1.f;
+            Vec4f pr = viewMatrix * cp;
+            c[0] = pr[0] / pr[3];
+            c[1] = pr[1] / pr[3];
+            c[2] = pr[2] / pr[3];
+
             vectors[j] = c;
             c[0] = (c[0] + 1.f) * WIDTH / 2.f;
             c[1] = (c[1] + 1.f) * HEIGHT / 2.f;
@@ -48,7 +74,6 @@ int main(int argc, const char** argv) {
             triangle[j][2] = c[2];
         }
         Vec3f normal = ((vectors[2] - vectors[0])^(vectors[1] - vectors[0])).normalize();
-
 
 
         Vec2f uv[] = { model.uv(i, 0), model.uv(i, 1), model.uv(i, 2) };

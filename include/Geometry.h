@@ -10,6 +10,8 @@
 namespace TRM
 {
 
+#define PI 3.1415926f
+
 template <size_t DimCols, size_t DimRows, typename T>
 class mat;
 
@@ -372,5 +374,7 @@ Vec3f barycentric(vec<DimRows, float> A, vec<DimRows, float> B, vec<DimRows, flo
 Matrix lookAt(Vec3f eye, Vec3f look, Vec3f up);
 Matrix perspective(float fovy, float aspect, float near, float far);
 
+
+float degToRadian(float deg);
 
 }

@@ -48,3 +48,6 @@ target_link_libraries(LightAndFaceCut tinyRender)
 
 add_executable(ModelTexture example/ModelTexture.cpp)
 target_link_libraries(ModelTexture tinyRender)
+
+add_executable(ViewMatrix example/ViewMatrix.cpp)
+target_link_libraries(ViewMatrix tinyRender)
