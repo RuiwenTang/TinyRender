@@ -8,7 +8,6 @@ The algrithom is like this:
 For three point `A` `B` and `C` with an other point `P`, there is the following geometric relations:    
 ![TriangleAlgrithom](./screenshoots/TriangleAlgrithom.png)
 
-
 the full code is in [Triangle.cpp](./example/Triangle.cpp)    
 Result like this:    
 ![BasicTriangle](./screenshoots/basictriangle.png)
@@ -105,3 +104,16 @@ And the render result me like this:
 ![Light and Depth](./screenshoots/lightanddepth.png)
 
 ### View Matrix
+In most OpenGL engines, will have a tool class called `camera`. But in real opengl api, only have matrix transform. And `move camera` is actully doing some matrix transform, called `view matrix`. After view transformation we can get a point in `camera coordinate` position.    
+Think about a point P has coordinates (x,y,z) in the frame (O, i,j,k). we can use vector equation to describte it like this:    
+![opimage](./screenshoots/opimage.png)    
+
+Now image that we have another frame (O', i',j',k'). How do we transform coordinates given in one frame to another? First of all let us note that since (i,j,k) and (i',j',k') are bases of 3D, there exists a (non degenerate) matrix M such that:    
+![twocorrdinates](./screenshoots/twocorrdinates.png)    
+And we can get the following equations:    
+![transformee](./screenshoots/transformee.png)    
+
+Using this equation we can now moving camera:    
+![viewmatrix01](./screenshoots/viewmatrix01.png)
+![viewmatrix01](./screenshoots/viewmatrix02.png)
+![viewmatrix01](./screenshoots/viewmatrix03.png)

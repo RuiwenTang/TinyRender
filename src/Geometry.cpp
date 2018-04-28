@@ -7,21 +7,27 @@ template <> template <> vec<3,float>::vec(const vec<3,int> &v)   : x(v.x),y(v.y)
 template <> template <> vec<2,int>  ::vec(const vec<2,float> &v) : x(int(v.x+.5f)),y(int(v.y+.5f)) {}
 template <> template <> vec<2,float>::vec(const vec<2,int> &v)   : x(v.x),y(v.y) {}
 
-Matrix lookAt(Vec3f eye, Vec3f look, Vec3f up) {
-    Vec3f z = (eye - look).normalize(); // z axis
-    Vec3f x = cross(up, z).normalize(); // x axis
-    Vec3f y = cross(z, x).normalize(); // y axis
+Matrix lookAt(Vec3f eye, Vec3f center, Vec3f up) {
 
-    Matrix Minv = Matrix::identity();
-    Matrix Tr   = Matrix::identity();
-    for (int i=0; i<3; i++) {
-        Minv[0][i] = x[i];
-        Minv[1][i] = y[i];
-        Minv[2][i] = z[i];
-        Tr[i][3] = -look[i];
-    }
+    Matrix ret;
 
-    Matrix ret = Minv * Tr;
+    Vec3f f = (center - eye).normalize(); // z axis
+    Vec3f s = cross(f, up).normalize();   // x axis
+    Vec3f u = cross(s, f).normalize();    // y axis
+
+    ret[0][0] = s[0];
+    ret[0][1] = s[1];
+    ret[0][2] = s[2];
+    ret[1][0] = u[0];
+    ret[1][1] = u[1];
+    ret[1][2] = u[2];
+    ret[2][0] = -f[0];
+    ret[2][1] = -f[1];
+    ret[2][2] = -f[2];
+    ret[0][3] = -1.f * (s * eye);
+    ret[1][3] = -1.f * (u * eye);
+    ret[2][3] = (f * eye);
+    ret[3][3] = 1.f;
     return ret;
 }
 

@@ -15,7 +15,7 @@ void TinyRender::attachBuffer(TGAImage* image) {
         int height = mImage->get_height();
         mZBuffer = new float[width * height];
         for(size_t i = 0; i < width * height; i++) {
-            mZBuffer[i] = -std::numeric_limits<float>::max();
+            mZBuffer[i] = std::numeric_limits<float>::max();
         }
     }
 }
@@ -134,7 +134,7 @@ void TinyRender::triangle(Vec3f *pts, TGAColor *colors) {
 
             float pz = pts[0][2] * bc_screen[0] + pts[1][2] * bc_screen[1] + pts[2][2] * bc_screen[2];
 
-            if (mZBuffer[ int(p.x + p.y * mImage->get_width()) ] > pz) continue;
+            if (mZBuffer[ int(p.x + p.y * mImage->get_width()) ] < pz) continue;
 
 
             mZBuffer[ int(p.x + p.y * mImage->get_width()) ] = pz;
@@ -181,8 +181,8 @@ void TinyRender::triangle(Vec3f* pts, Vec2f* uvs, TGAImage* texture) {
             
             float pz = pts[0][2] * bc_screen[0] + pts[1][2] * bc_screen[1] + pts[2][2] * bc_screen[2];
             
-            if (mZBuffer[ int(p.x + p.y * mImage->get_width()) ] > pz) continue;
-            
+            if (mZBuffer[ int(p.x + p.y * mImage->get_width()) ] < pz) continue;
+
             
             mZBuffer[ int(p.x + p.y * mImage->get_width()) ] = pz;
 			/**

@@ -51,3 +51,6 @@ target_link_libraries(ModelTexture tinyRender)
 
 add_executable(ViewMatrix example/ViewMatrix.cpp)
 target_link_libraries(ViewMatrix tinyRender)
+
+add_executable(PerspectiveMatrix example/PerspectiveMatrix.cpp)
+target_link_libraries(PerspectiveMatrix tinyRender)
