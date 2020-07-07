@@ -2,3 +2,5 @@
 build
 buildXcode
 .vscode
+cmake-build*
+.idea/*
