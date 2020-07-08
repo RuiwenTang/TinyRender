@@ -155,63 +155,63 @@ bool TGAImage::load_rle_data(std::ifstream &in) {
 }
 
 bool TGAImage::write_tga_file(const char *filename, bool rle) {
-    unsigned char developer_area_ref[4] = {0, 0, 0, 0};
-    unsigned char extension_area_ref[4] = {0, 0, 0, 0};
-    unsigned char footer[18] = {'T','R','U','E','V','I','S','I','O','N','-','X','F','I','L','E','.','\0'};
-    std::ofstream out;
-    out.open (filename, std::ios::binary);
-    if (!out.is_open()) {
-        std::cerr << "can't open file " << filename << "\n";
-        out.close();
-        return false;
-    }
-    TGAHeader header;
-    memset((void *)&header, 0, sizeof(header));
-    header.bitsperpixel = bytespp<<3;
-    header.width  = width;
-    header.height = height;
-    header.datatypecode = (bytespp==GRAYSCALE?(rle?11:3):(rle?10:2));
-    header.imagedescriptor = 0x20; // top-left origin
-    out.write((char *)&header, sizeof(header));
-    if (!out.good()) {
-        out.close();
-        std::cerr << "can't dump the tga file\n";
-        return false;
-    }
-    if (!rle) {
-        out.write((char *)data, width*height*bytespp);
-        if (!out.good()) {
-            std::cerr << "can't unload raw data\n";
-            out.close();
-            return false;
-        }
-    } else {
-        if (!unload_rle_data(out)) {
-            out.close();
-            std::cerr << "can't unload rle data\n";
-            return false;
-        }
-    }
-    out.write((char *)developer_area_ref, sizeof(developer_area_ref));
-    if (!out.good()) {
-        std::cerr << "can't dump the tga file\n";
-        out.close();
-        return false;
-    }
-    out.write((char *)extension_area_ref, sizeof(extension_area_ref));
-    if (!out.good()) {
-        std::cerr << "can't dump the tga file\n";
-        out.close();
-        return false;
-    }
-    out.write((char *)footer, sizeof(footer));
-    if (!out.good()) {
-        std::cerr << "can't dump the tga file\n";
-        out.close();
-        return false;
-    }
+  unsigned char developer_area_ref[4] = {0, 0, 0, 0};
+  unsigned char extension_area_ref[4] = {0, 0, 0, 0};
+  unsigned char footer[18] = {'T','R','U','E','V','I','S','I','O','N','-','X','F','I','L','E','.','\0'};
+  std::ofstream out;
+  out.open (filename, std::ios::binary);
+  if (!out.is_open()) {
+    std::cerr << "can't open file " << filename << "\n";
     out.close();
-    return true;
+    return false;
+  }
+  TGAHeader header;
+  memset((void *)&header, 0, sizeof(header));
+  header.bitsperpixel = bytespp<<3;
+  header.width  = width;
+  header.height = height;
+  header.datatypecode = (bytespp==GRAYSCALE?(rle?11:3):(rle?10:2));
+  header.imagedescriptor = 0x20; // top-left origin
+  out.write((char *)&header, sizeof(header));
+  if (!out.good()) {
+    out.close();
+    std::cerr << "can't dump the tga file\n";
+    return false;
+  }
+  if (!rle) {
+    out.write((char *)data, width*height*bytespp);
+    if (!out.good()) {
+      std::cerr << "can't unload raw data\n";
+      out.close();
+      return false;
+    }
+  } else {
+    if (!unload_rle_data(out)) {
+      out.close();
+      std::cerr << "can't unload rle data\n";
+      return false;
+    }
+  }
+  out.write((char *)developer_area_ref, sizeof(developer_area_ref));
+  if (!out.good()) {
+    std::cerr << "can't dump the tga file\n";
+    out.close();
+    return false;
+  }
+  out.write((char *)extension_area_ref, sizeof(extension_area_ref));
+  if (!out.good()) {
+    std::cerr << "can't dump the tga file\n";
+    out.close();
+    return false;
+  }
+  out.write((char *)footer, sizeof(footer));
+  if (!out.good()) {
+    std::cerr << "can't dump the tga file\n";
+    out.close();
+    return false;
+  }
+  out.close();
+  return true;
 }
 
 // TODO: it is not necessary to break a raw chunk for two equal pixels (for the matter of the resulting size)

@@ -7,11 +7,11 @@ set(CMAKE_CXX_STANDARD 11)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_library(tinyRender 
-    src/TinyRender.cpp
+add_library(tinyRender
+        src/RenderBuffer.cpp
     src/TGAImage.cpp
     src/Model.cpp
-    include/TinyRender.h
+        include/RenderBuffer.h
     include/TGAImage.h
     include/Model.h
     include/Geometry.h
@@ -21,3 +21,6 @@ add_library(tinyRender
 ######## example
 add_executable(example1 example/example1.cpp)
 target_link_libraries(example1 tinyRender)
+
+add_executable(example2 example/example2.cpp)
+target_link_libraries(example2 tinyRender)

@@ -2,21 +2,22 @@
 #include <fstream>
 
 namespace TRM {
-
+#pragma pack(push,1)
 struct TGAHeader {
-    char idlength;
-    char colormaptype;
-    char datatypecode;
-    short colormaporigin;
-    short colormaplength;
-    char colormapdepth;
-    short x_origin;
-    short y_origin;
-    short width;
-    short height;
-    char  bitsperpixel;
-    char  imagedescriptor;
+  char idlength;
+  char colormaptype;
+  char datatypecode;
+  short colormaporigin;
+  short colormaplength;
+  char colormapdepth;
+  short x_origin;
+  short y_origin;
+  short width;
+  short height;
+  char  bitsperpixel;
+  char  imagedescriptor;
 };
+#pragma pack(pop)
 
 struct TGAColor {
     unsigned char bgra[4];

@@ -40,5 +40,15 @@ int main(int argc, const char** argv) {
 
     mat3 * v6;
 
+    TRM::Vec2i a {0, 0};
+    TRM::Vec2i b {2, 0};
+    TRM::Vec2i c {2, 2};
+    TRM::Vec2i p {1, 1};
+
+    auto ret = TRM::barycentric(a, b, c, p);
+
+    bool outside = (ret[0] < 0 || ret [1] < 0 || ret[2] < 0);
+    std::cout << "outside = " << std::boolalpha << outside << std::endl;
+
     return 0;
 }
