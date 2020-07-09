@@ -109,7 +109,7 @@ bool TGAImage::load_rle_data(std::ifstream &in) {
     unsigned long pixelcount = width*height;
     unsigned long currentpixel = 0;
     unsigned long currentbyte  = 0;
-    TGAColor colorbuffer;
+    Color colorbuffer;
     do {
         unsigned char chunkheader = 0;
         chunkheader = in.get();
@@ -257,14 +257,14 @@ bool TGAImage::unload_rle_data(std::ofstream &out) {
     return true;
 }
 
-TGAColor TGAImage::get(int x, int y) {
+Color TGAImage::get(int x, int y) {
     if (!data || x<0 || y<0 || x>=width || y>=height) {
-        return TGAColor();
+        return Color();
     }
-    return TGAColor(data+(x+y*width)*bytespp, bytespp);
+    return Color(data+(x+y*width)*bytespp, bytespp);
 }
 
-bool TGAImage::set(int x, int y, TGAColor &c) {
+bool TGAImage::set(int x, int y, Color &c) {
     if (!data || x<0 || y<0 || x>=width || y>=height) {
         return false;
     }
@@ -272,7 +272,7 @@ bool TGAImage::set(int x, int y, TGAColor &c) {
     return true;
 }
 
-bool TGAImage::set(int x, int y, const TGAColor &c) {
+bool TGAImage::set(int x, int y, const Color &c) {
     if (!data || x<0 || y<0 || x>=width || y>=height) {
         return false;
     }
@@ -297,8 +297,8 @@ bool TGAImage::flip_horizontally() {
     int half = width>>1;
     for (int i=0; i<half; i++) {
         for (int j=0; j<height; j++) {
-            TGAColor c1 = get(i, j);
-            TGAColor c2 = get(width-1-i, j);
+            Color c1 = get(i, j);
+            Color c2 = get(width-1-i, j);
             set(i, j, c2);
             set(width-1-i, j, c1);
         }

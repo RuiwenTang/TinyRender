@@ -6,7 +6,7 @@ void RenderBuffer::attachImage(TGAImage *image) {
   mImage = image;
 }
 
-void RenderBuffer::clear(const TGAColor &color) {
+void RenderBuffer::clear(const Color &color) {
   for (int x = 0; x < this->mImage->get_width(); x++) {
     for (int y = 0; y < this->mImage->get_height(); y++) {
       mImage->set(x, y, color);
@@ -14,16 +14,16 @@ void RenderBuffer::clear(const TGAColor &color) {
   }
 }
 
-void RenderBuffer::triangle(const Vec2i &a, const Vec2i &b, const Vec2i &c, const TGAColor &color) {
+void RenderBuffer::triangle(const Vec2i &a, const Vec2i &b, const Vec2i &c, const Color &color) {
 
 }
 
 void RenderBuffer::triangle(const Vec2i &a,
                             const Vec2i &b,
                             const Vec2i &c,
-                            const TGAColor &colorA,
-                            const TGAColor &colorB,
-                            const TGAColor &colorC) {
+                            const Color &colorA,
+                            const Color &colorB,
+                            const Color &colorC) {
   Vec2i bbox_max{0, 0};
   Vec2i bbox_min{this->mImage->get_width() - 1, this->mImage->get_height() - 1};
 
@@ -42,7 +42,7 @@ void RenderBuffer::triangle(const Vec2i &a,
         continue;
       }
 
-      TGAColor out_color;
+      Color out_color;
       out_color.bgra[0] = bc_res[0] * colorA.bgra[0] + bc_res[1] * colorB.bgra[0] + bc_res[2] * colorC.bgra[0];
       out_color.bgra[1] = bc_res[0] * colorA.bgra[1] + bc_res[1] * colorB.bgra[1] + bc_res[2] * colorC.bgra[1];
       out_color.bgra[2] = bc_res[0] * colorA.bgra[2] + bc_res[1] * colorB.bgra[2] + bc_res[2] * colorC.bgra[2];
@@ -52,7 +52,7 @@ void RenderBuffer::triangle(const Vec2i &a,
   }
 }
 
-void RenderBuffer::drawLine(const Vec2i &a, const Vec2i &b, int lineWidth, const TGAColor &color) {
+void RenderBuffer::drawLine(const Vec2i &a, const Vec2i &b, int lineWidth, const Color &color) {
   Vec2f p_ab {b[0] - a[0], b[1] - a[1]};
 
   /**
@@ -65,7 +65,7 @@ void RenderBuffer::drawLine(const Vec2i &a, const Vec2i &b, int lineWidth, const
    */
 
   Vec2f p_normal {-p_ab[1], p_ab[0]};
-  p_normal.normalize();
+  p_normal = glm::normalize(p_normal);
 
  Vec2f p_up {lineWidth * p_normal[0] / 2, lineWidth * p_normal[1] / 2};
 

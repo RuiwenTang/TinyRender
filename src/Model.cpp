@@ -80,7 +80,7 @@ void Model::load_texture(std::string filename, const char *suffix, TGAImage &img
     }
 }
 
-TGAColor Model::diffuse(Vec2f uvf) {
+Color Model::diffuse(Vec2f uvf) {
     Vec2i uv;
     uv[0] = uvf[0]*diffusemap_.get_width();
     uv[1] = uvf[1]*diffusemap_.get_height();
@@ -91,7 +91,7 @@ Vec3f Model::normal(Vec2f uvf) {
     Vec2i uv;
     uv[0] = uvf[0]*normalmap_.get_width();
     uv[1] = uvf[1]*normalmap_.get_height();
-    TGAColor c = normalmap_.get(uv[0], uv[1]);
+    Color c = normalmap_.get(uv[0], uv[1]);
     Vec3f res;
     for (int i=0; i<3; i++)
         res[2-i] = (float)c[i]/255.f*2.f - 1.f;
@@ -111,7 +111,7 @@ float Model::specular(Vec2f uvf) {
 
 Vec3f Model::normal(int iface, int nthvert) {
     int idx = faces_[iface][nthvert][2];
-    return norms_[idx].normalize();
+    return glm::normalize(norms_[idx]);
 }
 
 }

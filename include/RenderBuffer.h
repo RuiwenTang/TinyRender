@@ -11,16 +11,16 @@ class RenderBuffer {
   virtual ~RenderBuffer() = default;
 
   void attachImage(TGAImage *image);
-  void clear(const TGAColor& color);
-  void triangle(const Vec2i &a, const Vec2i &b, const Vec2i &c, const TGAColor &color);
+  void clear(const Color& color);
+  void triangle(const Vec2i &a, const Vec2i &b, const Vec2i &c, const Color &color);
   void triangle(const Vec2i &a,
                 const Vec2i &b,
                 const Vec2i &c,
-                const TGAColor &colorA,
-                const TGAColor &colorB,
-                const TGAColor &colorC);
+                const Color &colorA,
+                const Color &colorB,
+                const Color &colorC);
 
-  void drawLine(const Vec2i& a, const Vec2i&b, int lineWidth, const TGAColor& color);
+  void drawLine(const Vec2i& a, const Vec2i&b, int lineWidth, const Color& color);
 
  protected:
   TGAImage *mImage;

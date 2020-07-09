@@ -10,10 +10,10 @@
 using namespace TRM;
 
 int main(int argc, const char **argv) {
-  TGAColor white{255, 255, 255};
-  TGAColor red{255, 0, 0};
-  TGAColor green {0, 255, 0};
-  TGAColor blue {0, 0, 255};
+  Color white{255, 255, 255};
+  Color red{255, 0, 0};
+  Color green {0, 255, 0};
+  Color blue {0, 0, 255};
 
   TGAImage image{800, 600, TGAImage::RGB};
   RenderBuffer render_buffer;
