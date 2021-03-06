@@ -15,10 +15,11 @@ static const std::string ASSETS_ROOT = ASSETS_PATH;
 
 int main(int argc, const char** argv) {
     
-    TGAImage framebuffer(WIDTH, HEIGHT, TGAImage::RGB);
+    TGAImage framebuffer(WIDTH, HEIGHT, TGAImage::RGBA);
     
     TinyRender render;
     render.attachBuffer(&framebuffer);
+    framebuffer.clearColor(TGAColor{0, 0, 0});
     
     std::string model_path = ASSETS_ROOT + "/african_head.obj";
     
@@ -41,7 +42,7 @@ int main(int argc, const char** argv) {
     }
     
     framebuffer.flip_vertically();
-    framebuffer.write_tga_file("framebuffer.tga");
+    framebuffer.write_png_stb("framebuffer.png");
     
     return 0;
 }

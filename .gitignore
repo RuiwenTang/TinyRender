@@ -3,3 +3,4 @@ build
 buildXcode
 .vscode
 config.h
+cmake-*

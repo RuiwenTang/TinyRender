@@ -23,7 +23,7 @@ int main(int argc, const char** argv) {
 
 	render.triangle(a, b, c, RED);
 
-	image.write_tga_file("framebuffer.tga");
+	image.write_png_stb("framebuffer.png");
 
     return 0;
 }

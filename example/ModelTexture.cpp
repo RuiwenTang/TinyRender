@@ -56,7 +56,7 @@ int main(int argc, const char** argv) {
     }
     
     framebuffer.flip_vertically();
-    framebuffer.write_tga_file("framebuffer.tga");
+    framebuffer.write_png_stb("framebuffer.png");
 
     return 0;
 }

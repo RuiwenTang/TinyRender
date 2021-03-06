@@ -10,6 +10,6 @@ int main(int argc, const char** argv) {
 
 	image.clearColor(RED);
 
-	image.write_tga_file("framebuffer.tga");
+	image.write_png_stb("framebuffer.png");
 	return 0;
 }
