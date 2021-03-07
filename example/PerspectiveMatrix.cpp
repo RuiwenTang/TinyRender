@@ -6,8 +6,8 @@
 
 using namespace TRM;
 
-#define WIDTH 400
-#define HEIGHT 300
+#define WIDTH 800
+#define HEIGHT 600
 
 static const std::string ASSETS_ROOT = ASSETS_PATH;
 
@@ -79,7 +79,7 @@ int main(int argc, const char** argv) {
     }
     
     framebuffer.flip_vertically();
-    framebuffer.write_tga_stb("framebuffer.png");
+    framebuffer.write_png_stb("framebuffer.png");
 
     return 0;
 }
