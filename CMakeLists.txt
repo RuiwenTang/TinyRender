@@ -21,10 +21,14 @@ add_library(tinyRender
     src/TGAImage.cpp
     src/Model.cpp
     src/Geometry.cpp
+    src/Color.cpp
+    src/Bitmap.cpp
     include/TinyRender.h
     include/TGAImage.h
     include/Model.h
     include/Geometry.h
+    include/Color.h
+    include/Bitmap.h
     )
 
 
