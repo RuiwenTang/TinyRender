@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <fstream>
 
-
 namespace TRM {
 
 #pragma pack(push, 1)
