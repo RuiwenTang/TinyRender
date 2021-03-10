@@ -2,6 +2,10 @@
 
 namespace TRM {
 
+void TinyRender3D::SetViewMatrix(Matrix const& matrix) {
+  mDevice->UpdateViewMatrix(matrix);
+}
+
 void TinyRender::attachBuffer(TGAImage* image) {
   mImage = image;
   if (mImage != nullptr && mImage->get_width() > 0 &&
