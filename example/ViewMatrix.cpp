@@ -25,11 +25,6 @@ int main(int argc, const char** argv) {
 
   Model model(model_path.c_str());
 
-  Vec3f light_dir;
-  light_dir[0] = 0;
-  light_dir[1] = 0;
-  light_dir[2] = -1.f;
-
   TGAImage texture;
   texture.read_tga_file(texture_path.c_str());
   texture.flip_vertically();

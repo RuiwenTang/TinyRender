@@ -23,11 +23,7 @@ int main(int argc, const char** argv) {
     std::string texture_path = ASSETS_ROOT + "/african_head_diffuse.tga";
     
     Model model(model_path.c_str());
-    
-    Vec3f light_dir;
-    light_dir[0] = 0;
-    light_dir[1] = 0;
-    light_dir[2] = -1.f;
+
 
     TGAImage texture;
     texture.read_tga_file(texture_path.c_str());
