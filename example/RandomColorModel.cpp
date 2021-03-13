@@ -1,26 +1,25 @@
+#include <Bitmap.h>
+#include <Device.h>
 #include <Model.h>
-#include <TGAImage.h>
 #include <TinyRender.h>
 #include <config.h>
 
 #include <random>
 #include <string>
 
-
 using namespace TRM;
 
 #define WIDTH 800
 #define HEIGHT 600
 
-static const TGAColor WHITE(255, 255, 255);
+static const Color WHITE(255, 255, 255);
 
 static const std::string ASSETS_ROOT = ASSETS_PATH;
 
 int main(int argc, const char** argv) {
-  TGAImage framebuffer(WIDTH, HEIGHT, TGAImage::RGB);
+  std::shared_ptr<Bitmap> framebuffer = std::make_shared<Bitmap>(WIDTH, HEIGHT);
 
-  TinyRender render;
-  render.attachBuffer(&framebuffer);
+  TinyRender3D render(Device::CreateBitmapDevice(framebuffer));
 
   std::string model_path = ASSETS_ROOT + "/african_head.obj";
 
@@ -40,13 +39,13 @@ int main(int argc, const char** argv) {
       triangle[j][0] = (int)c[0];
       triangle[j][1] = (int)c[1];
     }
-    TGAColor randomColor(rand() % 255, rand() % 255, rand() % 255);
-    TGAColor colors[] = {randomColor, randomColor, randomColor};
-    render.triangle(triangle, colors);
+    Color randomColor(rand() % 255, rand() % 255, rand() % 255);
+    Color colors[] = {randomColor, randomColor, randomColor};
+    render.DrawTriangle(triangle, colors);
   }
 
-  framebuffer.flip_vertically();
-  framebuffer.write_png_stb("framebuffer.png");
+  framebuffer->FlipVertically();
+  framebuffer->WriteToPng("framebuffer.png");
 
   return 0;
 }

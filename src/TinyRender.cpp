@@ -2,8 +2,15 @@
 
 namespace TRM {
 
-void TinyRender3D::SetViewMatrix(Matrix const& matrix) {
-  mViewMatrix = matrix;
+void TinyRender3D::SetViewMatrix(Matrix const& matrix) { mViewMatrix = matrix; }
+
+void TinyRender3D::DrawLine(int x0, int y0, int x1, int y1,
+                            Color const& color) {
+  mDevice->Line(x0, y0, x1, y1, color);
+}
+
+void TinyRender3D::DrawTriangle(Vec2i* pts, Color* colors) {
+  mDevice->Triangle(pts[0], pts[1], pts[2], colors[0], colors[1], colors[2]);
 }
 
 void TinyRender::attachBuffer(TGAImage* image) {

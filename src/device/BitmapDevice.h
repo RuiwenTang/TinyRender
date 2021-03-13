@@ -2,6 +2,8 @@
 
 #include <Device.h>
 
+#include <vector>
+
 namespace TRM {
 
 class BitmapDevice : public Device {
@@ -10,6 +12,9 @@ class BitmapDevice : public Device {
   ~BitmapDevice() override = default;
 
   void UpdateMatrix(Matrix const& matrix) override;
+
+  void Line(int32_t x0, int32_t y0, int32_t x1, int32_t y1,
+            Color const& color) override;
 
   void Triangle(Vec2i const& a, Vec2i const& b, Vec2i const& c, Color const& ca,
                 Color const& cb, Color const& cc) override;
@@ -25,6 +30,7 @@ class BitmapDevice : public Device {
 
  private:
   std::shared_ptr<Bitmap> mBitmap;
+  std::vector<float> mZBuffer;
   Matrix mMatrix;
 };
 

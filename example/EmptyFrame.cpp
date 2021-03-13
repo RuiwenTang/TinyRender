@@ -1,13 +1,13 @@
-#include <TGAImage.h>
+#include <Bitmap.h>
 
-static TRM::TGAColor WHITE(255, 255, 255);
-static TRM::TGAColor RED(255, 0, 0);
+static TRM::Color WHITE(255, 255, 255);
+static TRM::Color RED(255, 0, 0);
 
 int main(int argc, const char** argv) {
-  TRM::TGAImage image(800, 600, TRM::TGAImage::RGB);
+  TRM::Bitmap image(800, 600);
 
-  image.clearColor(RED);
+  image.ClearWithColor(RED);
 
-  image.write_png_stb("framebuffer.png");
+  image.WriteToPng("framebuffer.png");
   return 0;
 }

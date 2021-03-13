@@ -26,14 +26,17 @@ add_library(tinyRender
     src/Bitmap.cpp
     src/device/BitmapDevice.cpp
     src/device/BitmapDevice.h
+    src/device/Device.cpp
     include/TinyRender.h
     include/TGAImage.h
     include/Model.h
     include/Geometry.h
     include/Color.h
     include/Bitmap.h
+    include/Device.h
     )
 
+target_include_directories(tinyRender PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 ######## example #########
 add_executable(Triangle example/Triangle.cpp)

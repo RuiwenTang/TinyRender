@@ -1,26 +1,26 @@
+#include <Bitmap.h>
+#include <Device.h>
+#include <Geometry.h>
 #include <Model.h>
-#include <TGAImage.h>
 #include <TinyRender.h>
 #include <config.h>
 
 #include <string>
-
 
 using namespace TRM;
 
 #define WIDTH 800
 #define HEIGHT 600
 
-static const TGAColor WHITE(255, 255, 255);
+static const Color WHITE(255, 255, 255);
 
 static const std::string ASSETS_ROOT = ASSETS_PATH;
 
 int main(int argc, const char** argv) {
-  TGAImage framebuffer(WIDTH, HEIGHT, TGAImage::RGBA);
+  std::shared_ptr<Bitmap> framebuffer = std::make_shared<Bitmap>(WIDTH, HEIGHT);
 
-  TinyRender render;
-  render.attachBuffer(&framebuffer);
-  framebuffer.clearColor(TGAColor{0, 0, 0});
+  TinyRender3D render(Device::CreateBitmapDevice(framebuffer));
+  framebuffer->ClearWithColor(Color::ColorBlack());
 
   std::string model_path = ASSETS_ROOT + "/african_head.obj";
 
@@ -35,16 +35,16 @@ int main(int argc, const char** argv) {
       c[1] = (c[1] + 1.f) * HEIGHT / 2.f;
       triangle[j] = c;
     }
-    render.line(triangle[0][0], triangle[0][1], triangle[1][0], triangle[1][1],
-                WHITE);
-    render.line(triangle[1][0], triangle[1][1], triangle[2][0], triangle[2][1],
-                WHITE);
-    render.line(triangle[2][0], triangle[2][1], triangle[0][0], triangle[0][1],
-                WHITE);
+    render.DrawLine(triangle[0][0], triangle[0][1], triangle[1][0],
+                    triangle[1][1], WHITE);
+    render.DrawLine(triangle[1][0], triangle[1][1], triangle[2][0],
+                    triangle[2][1], WHITE);
+    render.DrawLine(triangle[2][0], triangle[2][1], triangle[0][0],
+                    triangle[0][1], WHITE);
   }
 
-  framebuffer.flip_vertically();
-  framebuffer.write_png_stb("framebuffer.png");
+  framebuffer->FlipVertically();
+  framebuffer->WriteToPng("framebuffer.png");
 
   return 0;
 }

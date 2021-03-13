@@ -6,11 +6,11 @@
 #include <fstream>
 #include <iostream>
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#ifdef _MSC_VER
-#define STBI_MSC_SECURE_CRT
-#endif
-#include <stb_image_write.h>
+// #define STB_IMAGE_WRITE_IMPLEMENTATION
+// #ifdef _MSC_VER
+// #define STBI_MSC_SECURE_CRT
+// #endif
+// #include <stb_image_write.h>
 
 namespace TRM {
 
@@ -216,7 +216,7 @@ bool TGAImage::write_tga_file(const char *filename, bool rle) {
 }
 
 bool TGAImage::write_png_stb(const char *filename) {
-  return stbi_write_png(filename, width, height, bytespp, data, 0);
+  return false; // stbi_write_png(filename, width, height, bytespp, data, 0);
 }
 
 // TODO: it is not necessary to break a raw chunk for two equal pixels (for the

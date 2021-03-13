@@ -10,7 +10,7 @@ class Bitmap {
   Bitmap(uint32_t width, uint32_t height);
   ~Bitmap() = default;
 
-  void setPixel(uint32_t x, uint32_t y, Color const& pixel);
+  void SetPixel(uint32_t x, uint32_t y, Color const& pixel);
 
   const Color* Pixels() const { return fPixels.data(); }
 
