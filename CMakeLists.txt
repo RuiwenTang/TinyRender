@@ -10,11 +10,12 @@ configure_file(
     ${PROJECT_SOURCE_DIR}/config.h
 )
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/glm)
 
 add_library(tinyRender 
     src/TinyRender.cpp
@@ -23,6 +24,8 @@ add_library(tinyRender
     src/Geometry.cpp
     src/Color.cpp
     src/Bitmap.cpp
+    src/device/BitmapDevice.cpp
+    src/device/BitmapDevice.h
     include/TinyRender.h
     include/TGAImage.h
     include/Model.h

@@ -12,8 +12,7 @@ class Device {
  public:
   virtual ~Device() = default;
 
-  virtual void UpdatePerspectiveMatrix(Matrix const& matrix) = 0;
-  virtual void UpdateViewMatrix(Matrix const& matrix) = 0;
+  virtual void UpdateMatrix(Matrix const& matrix) = 0;
 
   virtual void Line(int32_t x0, int32_t y0, int32_t x1, int32_t y1,
                     Color const& color) = 0;
@@ -32,6 +31,11 @@ class Device {
                 Color const& color) {
     Triangle(a, b, c, color, color, color);
   }
+
+  virtual void Flush() = 0;
+
+  static std::unique_ptr<Device> CreateBitmapDevice(
+      std::shared_ptr<Bitmap> bitmap);
 };
 
 }  // namespace TRM

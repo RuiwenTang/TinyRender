@@ -30,9 +30,9 @@ int main(int argc, const char** argv) {
     texture.flip_vertically();
 
     Vec3f eye;
-    eye[0] = 2.f;
-    eye[1] = 2.f;
-    eye[2] = 5.f;
+    eye[0] = 1.f;
+    eye[1] = 0.f;
+    eye[2] = 1.f;
 
     Vec3f center;
     center[0] = 0.f;
@@ -44,7 +44,7 @@ int main(int argc, const char** argv) {
     up[2] = 0.f;
 
     Matrix viewMatrix = lookAt(eye, center, up);
-    Matrix projectMatrix = perspective(degToRadian(90.0f), 4.f / 3.f, 0.1f, 1000.0f);
+    Matrix projectMatrix = perspective(degToRadian(60.0f), 4.f / 3.f, 0.1f, 1000.0f);
 
     /** draw all vertex triangle ***/
     for (size_t i = 0; i < model.nfaces(); i++) {

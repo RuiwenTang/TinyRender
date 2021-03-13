@@ -10,7 +10,10 @@ namespace TRM {
 
 class TinyRender3D {
  public:
-  TinyRender3D(std::unique_ptr<Device> device) : mDevice(std::move(device)) {}
+  TinyRender3D(std::unique_ptr<Device> device) : mDevice(std::move(device)) {
+    mViewMatrix = IdentityMatrix();
+    mPerspectiveMatrix = IdentityMatrix();
+  }
   ~TinyRender3D() = default;
 
   void SetViewMatrix(Matrix const& matrix);
@@ -23,6 +26,8 @@ class TinyRender3D {
   void DrawTriangle(Vec3f* pts, Vec2f* uvs, Bitmap* texture);
 
  private:
+  Matrix mViewMatrix;
+  Matrix mPerspectiveMatrix;
   std::unique_ptr<Device> mDevice;
 };
 
