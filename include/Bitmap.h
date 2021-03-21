@@ -18,6 +18,8 @@ class Bitmap {
 
   void ClearWithColor(Color const& color);
 
+  void ReadFromFile(const char* filename);
+
   void WriteToPng(const char* filename);
 
   uint32_t width() const { return fWidth; }

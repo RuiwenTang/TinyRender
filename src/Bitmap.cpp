@@ -6,6 +6,9 @@
 #endif
 #include <stb_image_write.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <algorithm>
 #include <cassert>
 
@@ -26,6 +29,23 @@ void Bitmap::SetPixel(uint32_t x, uint32_t y, Color const &pixel) {
 void Bitmap::ClearWithColor(Color const &color) {
   std::for_each(fPixels.begin(), fPixels.end(),
                 [color](Color &c) { c = color; });
+}
+
+void Bitmap::ReadFromFile(const char *filename) {
+  int x, y,n;
+  unsigned char* data = stbi_load(filename, &x, &y, &n, 0);
+  fPixels.resize(x * y);
+  for(int i = 0; i < x; i++) {
+    for (int j = 0; j < y; j++) {
+      Color color;
+      std::memcpy(color.rgba().data(), data + (j * x + i) * n, n);
+      if (n < 4) {
+        color.rgba()[3] = 255;
+      }
+      fPixels[j * x + i] = color;
+    }
+  }
+
 }
 
 void Bitmap::WriteToPng(const char *filename) {

@@ -1,10 +1,10 @@
 #include <Model.h>
-#include <TGAImage.h>
+#include <Bitmap.h>
 #include <TinyRender.h>
 #include <config.h>
+#include <Device.h>
 
 #include <string>
-
 
 using namespace TRM;
 
@@ -14,17 +14,17 @@ using namespace TRM;
 static const std::string ASSETS_ROOT = ASSETS_PATH;
 
 int main(int argc, const char** argv) {
-  TGAImage framebuffer(WIDTH, HEIGHT, TGAImage::RGB);
-  framebuffer.clearColor(TGAColor(0, 0, 0));
+  std::shared_ptr<Bitmap> framebuffer = std::make_shared<Bitmap>(WIDTH, HEIGHT);
+  framebuffer->ClearWithColor(Color(0, 0, 0));
 
-  TinyRender render;
-  render.attachBuffer(&framebuffer);
+  TinyRender3D render(Device::CreateBitmapDevice(framebuffer));
 
   std::string model_path = ASSETS_ROOT + "/african_head.obj";
   std::string texture_path = ASSETS_ROOT + "/african_head_diffuse.tga";
 
   Model model(model_path.c_str());
 
+  std::shared_ptr<Bitmap> texture = std::make_shared<Bitmap>();
   TGAImage texture;
   texture.read_tga_file(texture_path.c_str());
   texture.flip_vertically();
@@ -52,15 +52,15 @@ int main(int argc, const char** argv) {
     Vec3f vectors[3];
     for (size_t j = 0; j < 3; j++) {
       Vec3f c = model.vert(face[j]);
-      Vec4f cp;
-      cp[0] = c[0];
-      cp[1] = c[1];
-      cp[2] = c[2];
-      cp[3] = 1.f;
-      Vec4f pr = viewMatrix * cp;
-      c[0] = pr[0];
-      c[1] = pr[1];
-      c[2] = pr[2] * -1.f;
+      // Vec4f cp;
+      // cp[0] = c[0];
+      // cp[1] = c[1];
+      // cp[2] = c[2];
+      // cp[3] = 1.f;
+      // Vec4f pr = viewMatrix * cp;
+      // c[0] = pr[0];
+      // c[1] = pr[1];
+      // c[2] = pr[2] * -1.f;
 
       vectors[j] = c;
       c[0] = (c[0] + 1.f) * WIDTH / 2.f;
@@ -70,10 +70,11 @@ int main(int argc, const char** argv) {
       triangle[j][2] = c[2];
     }
     Vec3f normal =
-        ((vectors[2] - vectors[0]) ^ (vectors[1] - vectors[0])).normalize();
+        Normalize(((vectors[2] - vectors[0]) ^ (vectors[1] - vectors[0])));
 
     Vec2f uv[] = {model.uv(i, 0), model.uv(i, 1), model.uv(i, 2)};
     render.triangle(triangle, uv, &texture);
+    render.DrawTriangle(triangle, uv, texture);
   }
 
   framebuffer.flip_vertically();
