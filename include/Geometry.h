@@ -9,7 +9,6 @@
 #include <iostream>
 #include <limits>
 
-
 namespace TRM {
 
 #define PI 3.1415926f

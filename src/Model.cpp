@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sstream>
 
-
 namespace TRM {
 
 Model::Model(const char *filename)
@@ -119,7 +118,8 @@ float Model::specular(Vec2f uvf) {
 
 Vec3f Model::normal(int iface, int nthvert) {
   int idx = faces_[iface][nthvert][2];
-  return Normalize(norms_[idx]);
+  // return Normalize(norms_[idx]);
+  return glm::normalize(norms_[idx]);
 }
 
 }  // namespace TRM

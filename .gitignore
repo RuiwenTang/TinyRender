@@ -4,3 +4,4 @@ buildXcode
 .vscode
 config.h
 cmake-*
+**/.cache
