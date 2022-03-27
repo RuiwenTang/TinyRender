@@ -4,6 +4,8 @@
 #include <array>
 #include <limits>
 
+#include "DDALine.h"
+
 namespace TRM {
 
 BitmapDevice::BitmapDevice(std::shared_ptr<Bitmap> bitmap)
@@ -17,38 +19,44 @@ void BitmapDevice::UpdateMatrix(Matrix const& matrix) { mMatrix = matrix; }
 
 void BitmapDevice::Line(int32_t x0, int32_t y0, int32_t x1, int32_t y1,
                         Color const& color) {
-  bool swap = false;
+  int32_t s_x0 = x0 * line_bresenham_interpolator::subpixel_scale;
+  int32_t s_y0 = y0 * line_bresenham_interpolator::subpixel_scale;
+  int32_t s_x1 = x1 * line_bresenham_interpolator::subpixel_scale;
+  int32_t s_y1 = y1 * line_bresenham_interpolator::subpixel_scale;
 
-  if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
-    std::swap(x0, y0);
-    std::swap(x1, y1);
-    swap = true;
+  line_bresenham_interpolator li{s_x0, s_y0, s_x1, s_y1};
+
+  uint32_t len = li.len();
+
+  if (len == 0) {
+    mBitmap->SetPixel(x0, y0, color);
+    return;
   }
 
-  if (x0 > x1) {
-    std::swap(x0, x1);
-    std::swap(y0, y1);
-  }
+  if (li.is_ver()) {
+    do {
+      int32_t s_x = li.x2();
+      int32_t s_y = li.y1();
 
-  int dx = x1 - x0;
-  int dy = y1 - y0;
+      int32_t i_x = li.x2_hr() % li.subpixel_mask;
+      int32_t i_y = li.y2_hr() % li.subpixel_mask;
 
-  float k = std::abs(dy / float(dx));
-  float dim = 0.f;
+      double alpha = std::sqrt(i_x * i_y  / (255.0 * 255.0)) * 255;
 
-  int y = y0;
-  for (int x = x0; x <= x1; x++) {
-    if (swap) {
-      mBitmap->SetPixel(y, x, color);
-    } else {
-      mBitmap->SetPixel(x, y, color);
-    }
+      auto rgba = color.rgba();
+      mBitmap->SetPixel(s_x, s_y, Color(rgba[0], rgba[1], rgba[2], (uint8_t) alpha));
 
-    dim += k;
-    if (dim > 0.5f) {
-      y += (y1 > y0 ? 1 : -1);
-      dim -= 1;
-    }
+      li.v_step();
+    } while (--len);
+  } else {
+    do {
+      int32_t s_x = li.x1();
+      int32_t s_y = li.y2();
+
+      mBitmap->SetPixel(s_x, s_y, color);
+
+      li.h_step();
+    } while (--len);
   }
 }
 

@@ -21,6 +21,7 @@ class Bitmap {
   void ReadFromFile(const char* filename);
 
   void WriteToPng(const char* filename);
+  void WriteToTGA(const char* filename);
 
   uint32_t width() const { return fWidth; }
 

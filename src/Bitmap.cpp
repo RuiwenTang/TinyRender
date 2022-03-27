@@ -32,10 +32,10 @@ void Bitmap::ClearWithColor(Color const &color) {
 }
 
 void Bitmap::ReadFromFile(const char *filename) {
-  int x, y,n;
-  unsigned char* data = stbi_load(filename, &x, &y, &n, 0);
+  int x, y, n;
+  unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
   fPixels.resize(x * y);
-  for(int i = 0; i < x; i++) {
+  for (int i = 0; i < x; i++) {
     for (int j = 0; j < y; j++) {
       Color color;
       std::memcpy(color.rgba().data(), data + (j * x + i) * n, n);
@@ -45,11 +45,14 @@ void Bitmap::ReadFromFile(const char *filename) {
       fPixels[j * x + i] = color;
     }
   }
-
 }
 
 void Bitmap::WriteToPng(const char *filename) {
   stbi_write_png(filename, fWidth, fHeight, 4, fPixels.data(), 0);
+}
+
+void Bitmap::WriteToTGA(const char *filename) {
+  stbi_write_jpg(filename, fWidth, fHeight, 4, fPixels.data(), 50);
 }
 
 void Bitmap::FlipHorizontally() {

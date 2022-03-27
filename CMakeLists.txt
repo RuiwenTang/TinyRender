@@ -19,6 +19,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/glm)
 
 add_library(tinyRender 
+    src/DDALine.h
+    src/DDALine.cpp
     src/TinyRender.cpp
     src/TGAImage.cpp
     src/Model.cpp
@@ -28,6 +30,7 @@ add_library(tinyRender
     src/device/BitmapDevice.cpp
     src/device/BitmapDevice.h
     src/device/Device.cpp
+    src/RasterizerCells.cpp
     include/TinyRender.h
     include/TGAImage.h
     include/Model.h
@@ -35,6 +38,7 @@ add_library(tinyRender
     include/Color.h
     include/Bitmap.h
     include/Device.h
+    include/RasterizerCells.h
     )
 
 target_include_directories(tinyRender PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -66,3 +70,6 @@ target_link_libraries(ViewMatrix tinyRender)
 
 add_executable(PerspectiveMatrix example/PerspectiveMatrix.cpp)
 target_link_libraries(PerspectiveMatrix tinyRender)
+
+add_executable(rasterizer_cell_example example/rasterizer_cell_example.cpp)
+target_link_libraries(rasterizer_cell_example tinyRender)

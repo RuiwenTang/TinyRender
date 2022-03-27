@@ -24,6 +24,8 @@ class Color final {
 
   std::array<uint8_t, 4>& rgba() { return fRGBA; }
 
+  std::array<uint8_t, 4> rgba() const { return fRGBA; }
+
   Color(Color const&) = default;
   Color& operator=(Color const&) = default;
 
