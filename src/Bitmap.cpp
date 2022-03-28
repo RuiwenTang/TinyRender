@@ -19,11 +19,31 @@ Bitmap::Bitmap(uint32_t width, uint32_t height)
   fPixels.resize(width * height);
 }
 
+Color Bitmap::GetPixel(uint32_t x, uint32_t y) const {
+  if (x < 0 || x >= fWidth || y < 0 || y >= fHeight) {
+    return {};
+  }
+
+  return fPixels[x + y * fWidth];
+}
+
 void Bitmap::SetPixel(uint32_t x, uint32_t y, Color const &pixel) {
   if (x < 0 || x >= fWidth || y < 0 || y >= fHeight) {
     return;
   }
   fPixels[x + y * fWidth] = pixel;
+}
+
+void Bitmap::BlendPixel(uint32_t x, uint32_t y, Color const& pixel) {
+  if (x < 0 || x >= fWidth || y < 0 || y >= fHeight) {
+    return;
+  }
+
+  auto src = this->GetPixel(x, y);
+
+  auto result = src.blend(pixel);
+
+  SetPixel(x, y, result);
 }
 
 void Bitmap::ClearWithColor(Color const &color) {

@@ -38,7 +38,7 @@ int main(int argc, const char** argv) {
               << " } alpha = " << (uint32_t)alpha << " "
               << std::endl;
   
-    framebuffer->SetPixel(cell.x, cell.y, TRM::Color(0, 0, 0, 255));
+    framebuffer->BlendPixel(cell.x, cell.y, TRM::Color(0, 0, 0, alpha));
   }
 
 

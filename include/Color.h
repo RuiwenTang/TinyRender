@@ -29,6 +29,9 @@ class Color final {
   Color(Color const&) = default;
   Color& operator=(Color const&) = default;
 
+  // 1 * src + (1 - src.alpha) * dst;
+  Color blend(const Color& src) const;
+
   static Color ColorTransparent();
   static Color ColorBlack();
   static Color ColorDarkGray();
