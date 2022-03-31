@@ -34,7 +34,7 @@ void Bitmap::SetPixel(uint32_t x, uint32_t y, Color const &pixel) {
   fPixels[x + y * fWidth] = pixel;
 }
 
-void Bitmap::BlendPixel(uint32_t x, uint32_t y, Color const& pixel) {
+void Bitmap::BlendPixel(uint32_t x, uint32_t y, Color const &pixel) {
   if (x < 0 || x >= fWidth || y < 0 || y >= fHeight) {
     return;
   }

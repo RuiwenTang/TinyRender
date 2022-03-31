@@ -31,6 +31,7 @@ add_library(tinyRender
     src/device/BitmapDevice.h
     src/device/Device.cpp
     src/RasterizerCells.cpp
+    src/SWRaster.cpp
     include/TinyRender.h
     include/TGAImage.h
     include/Model.h
@@ -39,6 +40,7 @@ add_library(tinyRender
     include/Bitmap.h
     include/Device.h
     include/RasterizerCells.h
+    include/SWRaster.h
     )
 
 target_include_directories(tinyRender PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -73,3 +75,6 @@ target_link_libraries(PerspectiveMatrix tinyRender)
 
 add_executable(rasterizer_cell_example example/rasterizer_cell_example.cpp)
 target_link_libraries(rasterizer_cell_example tinyRender)
+
+add_executable(sw_raster_example example/sw_raster_example.cpp)
+target_link_libraries(sw_raster_example tinyRender)

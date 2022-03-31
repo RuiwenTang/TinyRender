@@ -35,12 +35,10 @@ int main(int argc, const char** argv) {
   for (auto const& cell : cells) {
     uint8_t alpha = raster.calculate_alpha(cell.area);
     std::cout << "{ " << cell.x << ", " << cell.y
-              << " } alpha = " << (uint32_t)alpha << " "
-              << std::endl;
-  
+              << " } alpha = " << (uint32_t)alpha << " " << std::endl;
+
     framebuffer->BlendPixel(cell.x, cell.y, TRM::Color(0, 0, 0, alpha));
   }
-
 
   framebuffer->WriteToPng("raster_test.png");
   return 0;
