@@ -193,16 +193,16 @@ int32_t down_scale(T value) {
 
 static inline int32_t trunc(int32_t x) { return x >> PIXEL_BITS; }
 static inline int32_t sub_pixels(int32_t x) { return x << PIXEL_BITS; }
-static inline int32_t u_div_prep(int32_t t) {
-  return static_cast<int32_t>(std::numeric_limits<uint32_t>::max() >>
-                              PIXEL_BITS) /
-         t;
-}
-static inline int32_t u_div(int32_t a, int32_t b) {
-  return static_cast<int32_t>(
-      (static_cast<uint32_t>(a) * static_cast<uint32_t>(b)) >>
-      (sizeof(int32_t) * 8 - PIXEL_BITS));
-}
+// static inline int32_t u_div_prep(int32_t t) {
+//   return static_cast<int32_t>(std::numeric_limits<uint32_t>::max() >>
+//                               PIXEL_BITS) /
+//          t;
+// }
+// static inline int32_t u_div(int32_t a, int32_t b) {
+//   return static_cast<int32_t>(
+//       (static_cast<uint32_t>(a) * static_cast<uint32_t>(b)) >>
+//       (sizeof(int32_t) * 8 - PIXEL_BITS));
+// }
 
 void SWRaster::move_to(float x, float y) {
   int32_t pos_x, pos_y;
@@ -306,8 +306,8 @@ void SWRaster::render_line(int32_t to_x, int32_t to_y) {
     }
   } else {  // any other line
     int32_t prod = dx * fy1 - dy * fx1;
-    int32_t dx_r = u_div_prep(dx);
-    int32_t dy_r = u_div_prep(dy);
+    // int32_t dx_r = u_div_prep(dx);
+    // int32_t dy_r = u_div_prep(dy);
 
     /* The fundamental value `prod' determines which side and the  */
     /* exact coordinate where the line exits current cell.  It is  */
@@ -315,7 +315,8 @@ void SWRaster::render_line(int32_t to_x, int32_t to_y) {
     do {
       if (prod <= 0 && prod - dx * ONE_PIXEL > 0) {  // left
         fx2 = 0;
-        fy2 = u_div(-prod, -dx_r);
+        // fy2 = u_div(-prod, -dx_r);
+        fy2 = -1 * (0 * dx - prod) / dx;
         prod -= dy * ONE_PIXEL;
         this->curr_cell.cover += (fy2 - fy1);
         this->curr_cell.area += (fy2 - fy1) * (fx1 + fx2);
@@ -325,7 +326,8 @@ void SWRaster::render_line(int32_t to_x, int32_t to_y) {
       } else if (prod - dx * ONE_PIXEL <= 0 &&
                  prod - dx * ONE_PIXEL + dy * ONE_PIXEL > 0) {  // up
         prod -= dx * ONE_PIXEL;
-        fx2 = u_div(-prod, dy_r);
+        // fx2 = u_div(-prod, dy_r);
+        fx2 = -1 * prod / dy;
         fy2 = ONE_PIXEL;
         this->curr_cell.cover += (fy2 - fy1);
         this->curr_cell.area += (fy2 - fy1) * (fx1 + fx2);
@@ -337,14 +339,16 @@ void SWRaster::render_line(int32_t to_x, int32_t to_y) {
 
         prod += dy * ONE_PIXEL;
         fx2 = ONE_PIXEL;
-        fy2 = u_div(prod, dx_r);
+        // fy2 = u_div(prod, dx_r);
+        fy2 = prod / dx;
         this->curr_cell.cover += (fy2 - fy1);
         this->curr_cell.area += (fy2 - fy1) * (fx1 + fx2);
         fx1 = 0;
         fy1 = fy2;
         ex1++;
       } else {  // down
-        fx2 = u_div(prod, -dy_r);
+        // fx2 = u_div(prod, -dy_r);
+        fx2 = (0 * dx - prod) / dy;
         fy2 = 0;
         prod += dx * ONE_PIXEL;
         this->curr_cell.cover += (fy2 - fy1);
