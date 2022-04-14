@@ -1,5 +1,8 @@
 #pragma once
 
+#include <Geometry.h>
+
+#include <array>
 #include <limits>
 #include <unordered_map>
 #include <vector>
@@ -57,6 +60,8 @@ class SWRaster {
   Cell curr_cell = {};
   std::unordered_map<int32_t, std::vector<Cell>> m_cells_y = {};
   std::vector<Span> m_spans = {};
+  std::array<Vec2i, 32 * 3 + 1> m_bez_stack = {};
+  std::array<size_t, 32> m_lev_stack = {};
   bool curr_cell_invalid = true;
   bool even_odd = false;
   int32_t m_x = -1;

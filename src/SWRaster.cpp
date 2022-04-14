@@ -204,6 +204,24 @@ static inline int32_t sub_pixels(int32_t x) { return x << PIXEL_BITS; }
 //       (sizeof(int32_t) * 8 - PIXEL_BITS));
 // }
 
+static void sw_split_conic(Vec2i* base) {
+  int32_t a, b;
+
+  base[4].x = base[2].x;
+  a = base[0].x + base[1].x;
+  b = base[1].x + base[2].x;
+  base[3].x = b >> 1;
+  base[2].x = (a + b) >> 2;
+  base[1].x = a >> 1;
+
+  base[4].y = base[2].y;
+  a = base[0].y + base[1].y;
+  b = base[1].y + base[2].y;
+  base[3].y = b >> 1;
+  base[2].y = (a + b) >> 2;
+  base[1].y = a >> 1;
+}
+
 void SWRaster::move_to(float x, float y) {
   int32_t pos_x, pos_y;
 
@@ -222,7 +240,54 @@ void SWRaster::line_to(float x2, float y2) {
   render_line(up_scale(x2), up_scale(y2));
 }
 
-void SWRaster::quad_to(float cx, float cy, float x2, float y2) {}
+void SWRaster::quad_to(float cx, float cy, float x2, float y2) {
+  auto levels = m_lev_stack.data();
+  auto arc = m_bez_stack.data();
+  size_t level = 0;
+  int32_t min, max, y;
+
+  arc[0].x = up_scale(x2);
+  arc[0].y = up_scale(y2);
+  arc[1].x = up_scale(cx);
+  arc[1].y = up_scale(cy);
+  arc[2].x = m_x;
+  arc[2].y = m_y;
+  int32_t top = 0;
+
+  int32_t dx = std::abs(arc[2].x + arc[0].x - 2 * arc[1].x);
+  int32_t dy = std::abs(arc[2].y + arc[0].y - 2 * arc[1].y);
+
+  if (dx < dy) {
+    dx = dy;
+  }
+
+  if (dx < ONE_PIXEL / 4) {
+    goto DRAW;
+  }
+
+  level = 0;
+  do {
+    dx >>= 2;
+    level++;
+  } while (dx > ONE_PIXEL / 4);
+
+  levels[0] = level;
+
+  do {
+    level = levels[top];
+    if (level > 0) {
+      sw_split_conic(arc);
+      arc += 2;
+      top++;
+      levels[top] = levels[top - 1] = level - 1;
+      continue;
+    }
+  DRAW:
+    render_line(arc[0].x, arc[0].y);
+    top--;
+    arc -= 2;
+  } while (top >= 0);
+}
 
 void SWRaster::cubic_to(float cx1, float cy1, float cx2, float cy2, float x3,
                         float y3) {}
