@@ -253,6 +253,10 @@ void SWRaster::cubic_to(float cx1, float cy1, float cx2, float cy2, float x3,
                         float y3) {}
 
 void SWRaster::sweep() {
+  if (!curr_cell_invalid) {
+    record_curr_cell();
+  }
+
   int32_t current_y;
 
   m_spans.clear();

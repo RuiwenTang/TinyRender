@@ -17,6 +17,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/glm)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/freetype)
 
 add_library(tinyRender 
     src/DDALine.h
@@ -41,6 +42,10 @@ add_library(tinyRender
     include/Device.h
     include/RasterizerCells.h
     include/SWRaster.h
+    freetype/v_ft_math.cpp
+    freetype/v_ft_math.h
+    freetype/v_ft_raster.cpp
+    freetype/v_ft_raster.h
     )
 
 target_include_directories(tinyRender PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -78,3 +83,6 @@ target_link_libraries(rasterizer_cell_example tinyRender)
 
 add_executable(sw_raster_example example/sw_raster_example.cpp)
 target_link_libraries(sw_raster_example tinyRender)
+
+add_executable(ft_raster_example example/ft_raster_example.cpp)
+target_link_libraries(ft_raster_example tinyRender)
