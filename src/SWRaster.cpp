@@ -191,6 +191,11 @@ int32_t down_scale(T value) {
   return static_cast<int32_t>(value) >> (PIXEL_BITS);
 }
 
+template <class T>
+uint64_t left_shift(T a, int32_t b) {
+  return static_cast<uint64_t>(a) << b;
+}
+
 static inline int32_t trunc(int32_t x) { return x >> PIXEL_BITS; }
 static inline int32_t sub_pixels(int32_t x) { return x << PIXEL_BITS; }
 // static inline int32_t u_div_prep(int32_t t) {
@@ -241,52 +246,7 @@ void SWRaster::line_to(float x2, float y2) {
 }
 
 void SWRaster::quad_to(float cx, float cy, float x2, float y2) {
-  auto levels = m_lev_stack.data();
-  auto arc = m_bez_stack.data();
-  size_t level = 0;
-  int32_t min, max, y;
-
-  arc[0].x = up_scale(x2);
-  arc[0].y = up_scale(y2);
-  arc[1].x = up_scale(cx);
-  arc[1].y = up_scale(cy);
-  arc[2].x = m_x;
-  arc[2].y = m_y;
-  int32_t top = 0;
-
-  int32_t dx = std::abs(arc[2].x + arc[0].x - 2 * arc[1].x);
-  int32_t dy = std::abs(arc[2].y + arc[0].y - 2 * arc[1].y);
-
-  if (dx < dy) {
-    dx = dy;
-  }
-
-  if (dx < ONE_PIXEL / 4) {
-    goto DRAW;
-  }
-
-  level = 0;
-  do {
-    dx >>= 2;
-    level++;
-  } while (dx > ONE_PIXEL / 4);
-
-  levels[0] = level;
-
-  do {
-    level = levels[top];
-    if (level > 0) {
-      sw_split_conic(arc);
-      arc += 2;
-      top++;
-      levels[top] = levels[top - 1] = level - 1;
-      continue;
-    }
-  DRAW:
-    render_line(arc[0].x, arc[0].y);
-    top--;
-    arc -= 2;
-  } while (top >= 0);
+  render_quad_to(cx, cy, x2, y2);
 }
 
 void SWRaster::cubic_to(float cx1, float cy1, float cx2, float cy2, float x3,
@@ -510,6 +470,116 @@ SWRaster::Cell* SWRaster::find_cell() {
   cell->cover = 0;
 
   return cell;
+}
+
+void SWRaster::render_quad_to(float cx, float cy, float x2, float y2) {
+  auto levels = m_lev_stack.data();
+  auto arc = m_bez_stack.data();
+  size_t level = 0;
+  int32_t min, max, y;
+
+  arc[0].x = up_scale(x2);
+  arc[0].y = up_scale(y2);
+  arc[1].x = up_scale(cx);
+  arc[1].y = up_scale(cy);
+  arc[2].x = m_x;
+  arc[2].y = m_y;
+  int32_t top = 0;
+
+  int32_t dx = std::abs(arc[2].x + arc[0].x - 2 * arc[1].x);
+  int32_t dy = std::abs(arc[2].y + arc[0].y - 2 * arc[1].y);
+
+  if (dx < dy) {
+    dx = dy;
+  }
+
+  if (dx < ONE_PIXEL / 4) {
+    goto DRAW;
+  }
+
+  level = 0;
+  do {
+    dx >>= 2;
+    level++;
+  } while (dx > ONE_PIXEL / 4);
+
+  levels[0] = level;
+
+  do {
+    level = levels[top];
+    if (level > 0) {
+      sw_split_conic(arc);
+      arc += 2;
+      top++;
+      levels[top] = levels[top - 1] = level - 1;
+      continue;
+    }
+  DRAW:
+    render_line(arc[0].x, arc[0].y);
+    top--;
+    arc -= 2;
+  } while (top >= 0);
+}
+
+void SWRaster::render_quad_to2(float cx, float cy, float x2, float y2) {
+  Vec2i p0, p1, p2;
+  int32_t ax, ay, bx, by, dx, dy;
+  int32_t shift;
+
+  int64_t rx, ry;
+  int64_t qx, qy;
+  int64_t px, py;
+
+  uint32_t count;
+
+  p0.x = m_x;
+  p0.y = m_y;
+  p1.x = up_scale(cx);
+  p1.y = up_scale(cy);
+  p2.x = up_scale(x2);
+  p2.y = up_scale(y2);
+
+  bx = p1.x - p0.x;
+  by = p1.y - p0.y;
+  ax = p2.x - p1.x - bx;
+  ay = p2.y - p1.y - by;
+
+  dx = std::abs(ax);
+  dy = std::abs(ay);
+
+  if (dx < dy) {
+    dx = dy;
+  }
+
+  if (dx <= ONE_PIXEL / 4) {
+    render_line(p2.x, p2.y);
+    return;
+  }
+
+  shift = 0;
+
+  do {
+    dx >>= 2;
+    shift += 1;
+  } while (dx > ONE_PIXEL / 4);
+
+  rx = left_shift(ax, 33 - 2 * shift);
+  ry = left_shift(ay, 33 - 2 * shift);
+
+  qx = left_shift(bx, 33 - shift) + left_shift(ax, 32 - 2 * shift);
+  qy = left_shift(by, 33 - shift) + left_shift(ay, 32 - 2 * shift);
+
+  px = left_shift(p0.x, 32);
+  py = left_shift(p0.y, 32);
+
+  for (count = 1U << shift; count > 0; count--) {
+    px += qx;
+    py += qy;
+    qx += rx;
+    qy += ry;
+
+    render_line(px >> 32, py >> 32);
+  }
 }
 
 void SWRaster::update_xy(int32_t ex, int32_t ey) {

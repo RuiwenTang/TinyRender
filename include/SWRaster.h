@@ -52,6 +52,9 @@ class SWRaster {
   void record_curr_cell();
   Cell* find_cell();
 
+  void render_quad_to(float cx, float cy, float x2, float y2);
+  void render_quad_to2(float cx, float cy, float x2, float y2);
+
   void update_xy(int32_t ex, int32_t ey);
 
   void sweep_hline(int32_t x, int32_t y, int32_t area, int32_t count);

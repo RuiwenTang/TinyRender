@@ -6,6 +6,24 @@
 #define WIDTH 800
 #define HEIGHT 600
 
+struct QuadCoeff {
+  TRM::Vec2f A = {};
+  TRM::Vec2f B = {};
+  TRM::Vec2f C = {};
+
+  QuadCoeff(TRM::Vec2f const& a, TRM::Vec2f const& b, TRM::Vec2f const& c) {
+    C = a;
+    auto p1 = b;
+    auto p2 = c;
+    B = (p1 - C) * 2.f;
+    A = p2 - p1 * 2.f + C;
+  }
+
+  TRM::Vec2f eval(float t) { return eval({t, t}); }
+
+  TRM::Vec2f eval(TRM::Vec2f const& tt) { return (A * tt + B) * tt + C; }
+};
+
 int main(int argc, const char** argv) {
   std::shared_ptr<TRM::Bitmap> framebuffer =
       std::make_shared<TRM::Bitmap>(WIDTH, HEIGHT);
@@ -27,12 +45,17 @@ int main(int argc, const char** argv) {
   // raster.line_to(x1, y1);
 
   // star
-  raster.move_to(100, 10);
-  raster.line_to(40, 180);
-  raster.line_to(190, 60);
-  raster.line_to(10, 60);
-  raster.line_to(160, 180);
-  raster.line_to(100, 10);
+  // raster.move_to(100, 10);
+  // raster.line_to(40, 180);
+  // raster.line_to(190, 60);
+  // raster.line_to(10, 60);
+  // raster.line_to(160, 180);
+  // raster.line_to(100, 10);
+
+  raster.move_to(10, 10);
+  raster.quad_to(160, 10, 160, 160);
+
+  raster.line_to(10, 10);
 
   raster.sweep();
 
