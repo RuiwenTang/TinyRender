@@ -33,6 +33,7 @@ add_library(tinyRender
     src/device/Device.cpp
     src/RasterizerCells.cpp
     src/SWRaster.cpp
+    src/Triangulation.cpp
     include/TinyRender.h
     include/TGAImage.h
     include/Model.h
@@ -42,6 +43,7 @@ add_library(tinyRender
     include/Device.h
     include/RasterizerCells.h
     include/SWRaster.h
+    include/Triangulation.h
     freetype/v_ft_math.cpp
     freetype/v_ft_math.h
     freetype/v_ft_raster.cpp
@@ -86,3 +88,6 @@ target_link_libraries(sw_raster_example tinyRender)
 
 add_executable(ft_raster_example example/ft_raster_example.cpp)
 target_link_libraries(ft_raster_example tinyRender)
+
+add_executable(triangulation_example example/triangulation_example.cpp)
+target_link_libraries(triangulation_example tinyRender)
