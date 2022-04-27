@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -46,6 +47,33 @@ class EdgeList {
   std::vector<Edge*> m_sorted_edges = {};
   int32_t m_min_x_index = -1;
   int32_t m_max_x_index = -1;
+};
+
+class Triangulation {
+ public:
+  Triangulation(std::vector<Edge> upper_chain, std::vector<Edge> lower_chain);
+  ~Triangulation() = default;
+
+  void do_triangulate(std::function<void(glm::vec2 const&, glm::vec2 const&,
+                                         glm::vec2 const&)> const& callback);
+
+ private:
+  void init_state();
+  bool next_is_upper();
+  void push_and_move(bool upper);
+  glm::vec2 next_point(bool upper);
+  float calculate_k(glm::vec2 const& p1, glm::vec2 const& p2, bool upper);
+
+  bool check_visible(float prev_k, float current_k, bool upper);
+
+ private:
+  std::vector<Edge> m_upper_chain;
+  std::vector<Edge> m_lower_chain;
+  std::vector<glm::vec2> m_point_stack = {};
+  // curent vi-1 is upper chain
+  bool m_upper = true;
+  size_t m_current_upper_index = 0;
+  size_t m_current_lower_index = 0;
 };
 
 }  // namespace TRM
