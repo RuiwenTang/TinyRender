@@ -11,14 +11,6 @@ using namespace TRM;
 #define WIDTH 800
 #define HEIGHT 600
 
-float calculate_k(glm::vec2 const& p1, glm::vec2 const& p2, float nan_value) {
-  if (p1.x == p2.x) {
-    return nan_value;
-  }
-
-  return (p2.y - p1.y) / (p2.x - p1.x);
-}
-
 std::unique_ptr<EdgeList> build_mesh() {
   auto list = std::make_unique<EdgeList>();
 
@@ -27,6 +19,8 @@ std::unique_ptr<EdgeList> build_mesh() {
       {244.f, 374.f}, {200.f, 280.f}, {150.f, 374.f}, {112.f, 245.f},
       {26.f, 161.f},  {146.f, 143.f}, {199.f, 34.f},
   };
+  // std::vector<glm::vec2> pts{
+  //     {100, 100}, {300, 100}, {300, 300}, {100, 300}, {100, 100}};
 
   for (size_t i = 0; i < pts.size() - 1; i++) {
     list->add_edge(Edge(pts[i], pts[i + 1]));

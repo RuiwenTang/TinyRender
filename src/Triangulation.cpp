@@ -183,7 +183,13 @@ glm::vec2 Triangulation::next_point(bool upper) {
 float Triangulation::calculate_k(glm::vec2 const& p1, glm::vec2 const& p2,
                                  bool upper) {
   if (p1.x == p2.x) {
-    return upper ? -99999.f : 99999.f;
+    float y_del = p2.y - p1.y;
+
+    if (y_del > 0.f) {
+      return 99999.f;
+    } else {
+      return -99999.f;
+    }
   }
 
   return (p2.y - p1.y) / (p2.x - p1.x);
