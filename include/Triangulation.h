@@ -17,6 +17,8 @@ struct Edge {
       winding = -1;
     }
   }
+
+  Edge(glm::vec2 p1, glm::vec2 p2, bool) : start(p1), end(p2) {}
 };
 
 class EdgeList {

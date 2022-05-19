@@ -1,3 +1,4 @@
+#include <AvlTree.h>
 #include <Bitmap.h>
 #include <TinyRender.h>
 #include <Triangulation.h>
@@ -9,6 +10,39 @@ using namespace TRM;
 
 #define WIDTH 800
 #define HEIGHT 600
+
+struct EdgeCompare {
+  static bool lower(Edge const& e1, Edge const& e2) {
+    auto p1d = e1.start - e2.start;
+    auto p2d = e1.end - e2.end;
+
+    if (p1d.x < 0.f) {
+      return true;
+    }
+
+    if (p1d.x == 0.f && p1d.y < 0.f) {
+      return true;
+    }
+
+    if (p2d.x < 0.f) {
+      return true;
+    }
+
+    if (p2d.x == 0.f && p2d.y < 0.f) {
+      return true;
+    }
+
+    return false;
+  }
+
+  static bool equal(Edge const& e1, Edge const& e2) {
+    return e1.start == e2.start && e1.end == e2.end;
+  }
+
+  static bool larger(Edge const& e1, Edge const& e2) {
+    return !lower(e1, e2) && !equal(e1, e2);
+  }
+};
 
 std::unique_ptr<EdgeList> build_mesh() {
   auto list = std::make_unique<EdgeList>();

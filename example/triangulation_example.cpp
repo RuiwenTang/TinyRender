@@ -20,7 +20,9 @@ std::unique_ptr<EdgeList> build_mesh() {
       {26.f, 161.f},  {146.f, 143.f}, {199.f, 34.f},
   };
   // std::vector<glm::vec2> pts{
-  //     {100, 100}, {300, 100}, {300, 300}, {100, 300}, {100, 100}};
+  //     {10, 10},  {50, 10},   {50, 200}, {100, 200}, {100, 10},
+  //     {150, 30}, {150, 220}, {10, 220}, {10, 10},
+  // };
 
   for (size_t i = 0; i < pts.size() - 1; i++) {
     list->add_edge(Edge(pts[i], pts[i + 1]));
@@ -58,12 +60,28 @@ int main(int argc, const char** argv) {
 
       first = false;
     } else {
-      if (e.start == upper_current) {
-        upper_chain.emplace_back(e);
-        upper_current = e.end;
+      if (e.start.x == e.end.x) {
+        if (e.start == upper_current) {
+          upper_chain.emplace_back(e);
+          upper_current = e.end;
+        } else if (e.end == upper_current) {
+          upper_chain.emplace_back(Edge(e.end, e.start, false));
+          upper_current = e.start;
+        } else if (e.start == lower_current) {
+          lower_chain.emplace_back(e);
+          lower_current = e.end;
+        } else {
+          lower_chain.emplace_back(Edge(e.end, e.start, false));
+          lower_current = e.start;
+        }
       } else {
-        lower_chain.emplace_back(e);
-        lower_current = e.end;
+        if (e.start == upper_current) {
+          upper_chain.emplace_back(e);
+          upper_current = e.end;
+        } else {
+          lower_chain.emplace_back(e);
+          lower_current = e.end;
+        }
       }
     }
   }
