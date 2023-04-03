@@ -47,9 +47,9 @@ int main(int argc, const char** argv) {
       triangle[j][1] = (int)c[1];
     }
     Vec3f normal =
-        ((vectors[2] - vectors[0]) ^ (vectors[1] - vectors[0])).normalize();
+        glm::cross((vectors[2] - vectors[0]) , (vectors[1] - vectors[0]));
 
-    float indensity = normal * light_dir;
+    float indensity = 1.f;
 
     if (indensity > 0) {
       TGAColor color(255 * indensity, 255 * indensity, 255 * indensity);

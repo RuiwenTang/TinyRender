@@ -65,6 +65,9 @@ void Bitmap::ReadFromFile(const char *filename) {
       fPixels[j * x + i] = color;
     }
   }
+
+  fWidth = x;
+  fHeight = y;
 }
 
 void Bitmap::WriteToPng(const char *filename) {

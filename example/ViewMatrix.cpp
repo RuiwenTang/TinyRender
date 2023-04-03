@@ -24,10 +24,8 @@ int main(int argc, const char** argv) {
 
   Model model(model_path.c_str());
 
-  std::shared_ptr<Bitmap> texture = std::make_shared<Bitmap>();
-  TGAImage texture;
-  texture.read_tga_file(texture_path.c_str());
-  texture.flip_vertically();
+  std::shared_ptr<Bitmap> texture = std::make_shared<Bitmap>(0, 0);
+  texture->ReadFromFile(texture_path.c_str());
 
   Vec3f eye;
   eye[0] = 2.f;
@@ -69,16 +67,12 @@ int main(int argc, const char** argv) {
       triangle[j][1] = c[1];
       triangle[j][2] = c[2];
     }
-    Vec3f normal =
-        Normalize(((vectors[2] - vectors[0]) ^ (vectors[1] - vectors[0])));
 
     Vec2f uv[] = {model.uv(i, 0), model.uv(i, 1), model.uv(i, 2)};
-    render.triangle(triangle, uv, &texture);
-    render.DrawTriangle(triangle, uv, texture);
+    // render.DrawTriangle(triangle, uv, texture.get());
   }
 
-  framebuffer.flip_vertically();
-  framebuffer.write_png_stb("framebuffer.png");
+  framebuffer->WriteToPng("framebuffer.png");
 
   return 0;
 }

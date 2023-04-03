@@ -2,80 +2,131 @@
 
 #include <functional>
 #include <glm/glm.hpp>
+#include <memory>
 #include <vector>
+
+#include "LinkedList.h"
 
 namespace TRM {
 
-struct Edge {
-  glm::vec2 start;
-  glm::vec2 end;
-  int32_t winding = 1;
-
-  Edge(glm::vec2 p1, glm::vec2 p2) : start(p1), end(p2) {
-    if (start.x > end.x || (start.x == end.x && start.y > end.y)) {
-      std::swap(start, end);
-      winding = -1;
-    }
-  }
-
-  Edge(glm::vec2 p1, glm::vec2 p2, bool) : start(p1), end(p2) {}
+struct Object {
+  virtual ~Object() = default;
 };
 
-class EdgeList {
- public:
-  EdgeList() = default;
-  ~EdgeList() = default;
+struct Edge;
 
-  bool add_edge(Edge const& edge);
+struct Vertex : public Object {
+  // list
+  Vertex* prev = nullptr;
+  Vertex* next = nullptr;
 
-  void sort_edge_list();
+  // all edge above this point, sorted by y first, then x
+  LinkedList<Edge> edge_above = {};
+  LinkedList<Edge> edge_below = {};
 
-  std::vector<Edge*> sorted_list();
+  glm::vec2 point = {};
 
-  std::vector<Edge> const& raw_list() { return m_edges; }
+  Vertex() = default;
+  Vertex(glm::vec2 const& p) : point(p) {}
 
-  const Edge* left_most() const;
+  ~Vertex() override = default;
 
-  const Edge* right_most() const;
+  bool is_connected() const { return edge_above.head || edge_below.head; }
 
-  int32_t left_most_index() const { return m_min_x_index; }
+  void insert_above(Edge* e);
+  void insert_below(Edge* e);
+};
 
-  int32_t right_most_index() const { return m_max_x_index; }
+struct VertexCompare {
+  inline bool operator()(Vertex* v1, Vertex* v2) {
+    return Compare(v1->point, v2->point);
+  }
+
+  static bool Compare(glm::vec2 const& a, glm::vec2 const& b);
+};
+
+struct VertexList : public LinkedList<Vertex> {
+  VertexList() = default;
+  VertexList(Vertex* head, Vertex* tail) : LinkedList(head, tail) {}
+
+  void insert(Vertex* v, Vertex* prev, Vertex* next);
+  void remove(Vertex* v);
+
+  void append(VertexList const& other);
+  void append(Vertex* v);
+  void prepend(Vertex* v);
+
+  void close();
+};
+
+struct Edge : public Object {
+  Vertex* top = nullptr;
+  Vertex* bottom = nullptr;
+
+  Edge* above_prev = nullptr;
+  Edge* above_next = nullptr;
+  Edge* below_prev = nullptr;
+  Edge* below_next = nullptr;
+
+  int32_t winding = 1;
+
+  Edge(Vertex* top, Vertex* bottom, int32_t winding);
+
+  ~Edge() override = default;
+
+  // https://stackoverflow.com/questions/1560492/how-to-tell-whether-a-point-is-to-the-right-or-left-side-of-a-line
+  // return > 0 means point in left
+  // return < 0 means point in right
+  double side_dist(glm::vec2 const& p);
+
+  bool is_right_of(glm::vec2 const& p) { return side_dist(p) < 0.0; }
+
+  bool is_left_of(glm::vec2 const& p) { return side_dist(p) > 0.0; }
+
+  // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+  bool intersect(Edge* other, glm::vec2* point);
 
  private:
-  // contains raw edge data
-  // next.start == current.end
-  std::vector<Edge> m_edges = {};
-  std::vector<Edge*> m_sorted_edges = {};
-  int32_t m_min_x_index = -1;
-  int32_t m_max_x_index = -1;
+  double le_a;
+  double le_b;
+  double le_c;
+};
+
+class ObjectHeap {
+ public:
+  ObjectHeap() = default;
+  ~ObjectHeap() = default;
+
+  template <class T, class... Args>
+  T* Allocate(Args&&... args) {
+    objs_.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+
+    return static_cast<T*>(objs_.back().get());
+  }
+
+ private:
+  std::vector<std::unique_ptr<Object>> objs_ = {};
 };
 
 class Triangulation {
  public:
-  Triangulation(std::vector<Edge> upper_chain, std::vector<Edge> lower_chain);
+  Triangulation();
   ~Triangulation() = default;
+
+  void add_path(std::vector<glm::vec2> const& points);
 
   void do_triangulate(std::function<void(glm::vec2 const&, glm::vec2 const&,
                                          glm::vec2 const&)> const& callback);
 
  private:
-  void init_state();
-  bool next_is_upper();
-  void push_and_move(bool upper);
-  glm::vec2 next_point(bool upper);
-  float calculate_k(glm::vec2 const& p1, glm::vec2 const& p2, bool upper);
+  void build_mesh();
 
-  bool check_visible(float prev_k, float current_k, bool upper);
+  Edge* make_edge(Vertex* p1, Vertex* p2);
 
  private:
-  std::vector<Edge> m_upper_chain;
-  std::vector<Edge> m_lower_chain;
-  std::vector<glm::vec2> m_point_stack = {};
-  // curent vi-1 is upper chain
-  bool m_upper = true;
-  size_t m_current_upper_index = 0;
-  size_t m_current_lower_index = 0;
+  ObjectHeap heap_;
+  std::vector<VertexList> out_lines_;
+  VertexList mesh_;
 };
 
 }  // namespace TRM

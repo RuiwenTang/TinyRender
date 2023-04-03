@@ -48,8 +48,6 @@ int main(int argc, const char** argv) {
       triangle[j][1] = c[1];
       triangle[j][2] = c[2];
     }
-    Vec3f normal =
-        ((vectors[2] - vectors[0]) ^ (vectors[1] - vectors[0])).normalize();
 
     Vec2f uv[] = {model.uv(i, 0), model.uv(i, 1), model.uv(i, 2)};
     render.triangle(triangle, uv, &texture);

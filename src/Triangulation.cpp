@@ -5,202 +5,184 @@
 
 namespace TRM {
 
-struct EdgeCompare {
-  bool operator()(Edge const& e1, Edge const& e2) {
-    auto p1d = e1.start - e2.start;
-    auto p2d = e1.end - e2.end;
+void Vertex::insert_above(Edge* e) {
+  if (e->top->point == e->bottom->point ||  // horizontal
+      VertexCompare::Compare(e->bottom->point, e->top->point)) {
+    return;
+  }
 
-    if (p1d.x < 0.f) {
-      return true;
+  Edge* above_prev = nullptr;
+  Edge* above_next = nullptr;
+
+  for (above_next = edge_above.head; above_next != nullptr;
+       above_next = above_next->above_next) {
+    if (above_next->is_right_of(e->top->point)) {
+      break;
     }
 
-    if (p1d.x == 0.f && p1d.y < 0.f) {
-      return true;
+    above_prev = above_next;
+  }
+
+  LinkedList<Edge>::Insert<&Edge::above_prev, &Edge::above_next>(
+      e, above_prev, above_next, &edge_above.head, &edge_above.tail);
+}
+
+void Vertex::insert_below(Edge* e) {
+  if (e->top->point == e->bottom->point ||
+      VertexCompare::Compare(e->bottom->point, e->top->point)) {
+    return;
+  }
+
+  Edge* below_prev = nullptr;
+  Edge* below_next = nullptr;
+
+  for (below_next = edge_below.head; below_next != nullptr;
+       below_next = below_next->below_next) {
+    if (below_next->is_right_of(e->bottom->point)) {
+      break;
     }
 
-    if (p2d.x < 0.f) {
-      return true;
-    }
+    below_prev = below_next;
+  }
 
-    if (p2d.x == 0.f && p2d.y < 0.f) {
-      return true;
-    }
+  LinkedList<Edge>::Insert<&Edge::below_prev, &Edge::below_next>(
+      e, below_prev, below_next, &edge_below.head, &edge_below.tail);
+}
 
+bool VertexCompare::Compare(const glm::vec2& a, const glm::vec2& b) {
+  return a.y < b.y || (a.y == b.y && a.x < b.x);
+}
+
+void VertexList::insert(Vertex* v, Vertex* prev, Vertex* next) {
+  Insert<&Vertex::prev, &Vertex::next>(v, prev, next, &head, &tail);
+}
+
+void VertexList::remove(Vertex* v) {
+  Remove<&Vertex::prev, &Vertex::next>(v, &head, &tail);
+}
+
+void VertexList::append(VertexList const& other) {
+  if (other.head == nullptr) {
+    return;
+  }
+
+  if (tail) {
+    tail->next = other.head;
+    other.head->prev = tail;
+  } else {
+    head = other.head;
+  }
+
+  tail = other.tail;
+}
+
+void VertexList::append(Vertex* v) { insert(v, tail, nullptr); }
+
+void VertexList::prepend(Vertex* v) { insert(v, nullptr, head); }
+
+void VertexList::close() {
+  if (head && tail) {
+    tail->next = head;
+    head->prev = tail;
+  }
+}
+
+Edge::Edge(Vertex* top, Vertex* bottom, int32_t winding)
+    : top(top),
+      bottom(bottom),
+      winding(winding),
+      le_a(static_cast<double>(bottom->point.y) - top->point.y),
+      le_b(static_cast<double>(top->point.x) - bottom->point.x),
+      le_c(static_cast<double>(top->point.y) * bottom->point.x -
+           static_cast<double>(top->point.x) * bottom->point.y) {}
+
+double Edge::side_dist(const glm::vec2& p) {
+  return le_a * p.x + le_b * p.y + le_c;
+}
+
+bool Edge::intersect(Edge* other, glm::vec2* point) {
+  double denom = le_a * other->le_b - le_b * other->le_a;
+
+  if (denom == 0.0) {
     return false;
   }
-};
 
-bool EdgeList::add_edge(const Edge& edge) {
-  m_edges.emplace_back(edge);
+  double scale = 1.0 / denom;
+
+  point->x = glm::round(
+      static_cast<float>((le_b * other->le_c - other->le_b * le_c) * scale));
+  point->y = glm::round(
+      static_cast<float>((other->le_a * le_c - le_a * other->le_c) * scale));
+
+  if (glm::isinf(point->x) || glm::isinf(point->y)) {
+    return false;
+  }
 
   return true;
 }
 
-void EdgeList::sort_edge_list() {
-  std::sort(m_edges.begin(), m_edges.end(), EdgeCompare{});
-}
+Triangulation::Triangulation() : heap_(), out_lines_(), mesh_() {}
 
-const Edge* EdgeList::left_most() const {
-  if (m_min_x_index == -1) {
-    return nullptr;
+void Triangulation::add_path(const std::vector<glm::vec2>& points) {
+  out_lines_.emplace_back(VertexList{});
+
+  for (auto const& p : points) {
+    auto v = heap_.Allocate<Vertex>(p);
+
+    out_lines_.back().append(v);
   }
-
-  return &m_edges[m_min_x_index];
 }
-
-const Edge* EdgeList::right_most() const {
-  if (m_max_x_index == -1) {
-    return nullptr;
-  }
-
-  return &m_edges[m_max_x_index];
-}
-
-Triangulation::Triangulation(std::vector<Edge> upper_chain,
-                             std::vector<Edge> lower_chain)
-    : m_upper_chain(std::move(upper_chain)),
-      m_lower_chain(std::move(lower_chain)) {}
 
 void Triangulation::do_triangulate(
     const std::function<void(const glm::vec2&, const glm::vec2&,
                              const glm::vec2&)>& callback) {
-  if (m_lower_chain.empty() || m_upper_chain.empty()) {
-    // some thing is wrong
-    return;
-  }
+  build_mesh();
+}
 
-  if (m_lower_chain.front().start != m_upper_chain.front().start) {
-    return;
-  }
+void Triangulation::build_mesh() {
+  std::vector<Vertex*> temp{};
 
-  this->init_state();
+  for (auto const& list : out_lines_) {
+    auto prev = list.tail;
+    auto v = list.head;
 
-  while (m_current_lower_index < m_lower_chain.size() &&
-         m_current_upper_index < m_upper_chain.size()) {
-    bool next_upper = next_is_upper();
+    while (v != nullptr) {
+      auto next = v->next;
 
-    if (m_upper == next_upper) {  // next point is on same chain
-      if (m_point_stack.size() <= 1) {
-        push_and_move(m_upper);
-        continue;
+      auto edge = make_edge(prev, v);
+
+      if (edge) {
+        edge->bottom->insert_above(edge);
+        edge->top->insert_below(edge);
       }
 
-      glm::vec2 p = next_point(m_upper);
+      temp.emplace_back(v);
 
-      float prev_k =
-          calculate_k(m_point_stack[m_point_stack.size() - 2],
-                      m_point_stack[m_point_stack.size() - 1], m_upper);
-
-      float current_k =
-          calculate_k(m_point_stack[m_point_stack.size() - 1], p, m_upper);
-
-      if (!check_visible(prev_k, current_k, m_upper)) {
-        push_and_move(m_upper);
-        continue;
-      }
-
-      do {
-        // notify callback
-        callback(p, m_point_stack[m_point_stack.size() - 1],
-                 m_point_stack[m_point_stack.size() - 2]);
-
-        m_point_stack.pop_back();
-
-        if (m_point_stack.size() < 2) {
-          break;
-        }
-
-        float prev_k =
-            calculate_k(m_point_stack[m_point_stack.size() - 2],
-                        m_point_stack[m_point_stack.size() - 1], m_upper);
-
-        float current_k =
-            calculate_k(m_point_stack[m_point_stack.size() - 1], p, m_upper);
-
-        if (!check_visible(prev_k, current_k, m_upper)) {
-          break;
-        }
-
-      } while (m_point_stack.size() >= 2);
-
-      push_and_move(m_upper);
-    } else {  // next point is on reflex chain
-      glm::vec2 p = next_point(next_upper);
-
-      // triangle all remains point on stack
-      while (m_point_stack.size() > 1) {
-        callback(p, m_point_stack[0], m_point_stack[1]);
-
-        m_point_stack.erase(m_point_stack.begin());
-      }
-
-      push_and_move(next_upper);
-      m_upper = next_upper;
-    }
-  }
-}
-
-void Triangulation::init_state() {
-  // at begining both upper-chain and lower-chain should start at same point
-  m_point_stack.emplace_back(m_upper_chain.front().start);
-
-  // push next active point to stack and indicat if it on lower chain
-  if (m_upper_chain.front().end.x > m_lower_chain.front().end.x) {
-    m_upper = false;
-    m_current_lower_index++;
-    m_point_stack.emplace_back(m_lower_chain.front().end);
-  } else {
-    m_current_upper_index++;
-    m_point_stack.emplace_back(m_upper_chain.front().end);
-  }
-}
-
-bool Triangulation::next_is_upper() {
-  return m_upper_chain[m_current_upper_index].end.x <=
-         m_lower_chain[m_current_lower_index].end.x;
-}
-
-void Triangulation::push_and_move(bool upper) {
-  glm::vec2 p = next_point(upper);
-
-  m_point_stack.emplace_back(p);
-
-  if (upper) {
-    m_current_upper_index++;
-  } else {
-    m_current_lower_index++;
-  }
-}
-
-glm::vec2 Triangulation::next_point(bool upper) {
-  if (upper) {
-    return m_upper_chain[m_current_upper_index].end;
-  } else {
-    return m_lower_chain[m_current_lower_index].end;
-  }
-}
-
-float Triangulation::calculate_k(glm::vec2 const& p1, glm::vec2 const& p2,
-                                 bool upper) {
-  if (p1.x == p2.x) {
-    float y_del = p2.y - p1.y;
-
-    if (y_del > 0.f) {
-      return 99999.f;
-    } else {
-      return -99999.f;
+      prev = v;
+      v = next;
     }
   }
 
-  return (p2.y - p1.y) / (p2.x - p1.x);
+  std::sort(temp.begin(), temp.end(), VertexCompare{});
+
+  for (auto const& v : temp) {
+    mesh_.append(v);
+  }
 }
 
-bool Triangulation::check_visible(float prev_k, float current_k, bool upper) {
-  if (upper) {
-    return current_k > prev_k;
-  } else {
-    return current_k < prev_k;
+Edge* Triangulation::make_edge(Vertex* t, Vertex* b) {
+  if (!t || !b || t->point == b->point) {
+    return nullptr;
   }
+
+  int32_t winding = 1;
+
+  if (VertexCompare::Compare(b->point, t->point)) {
+    winding = -1;
+    std::swap(t, b);
+  }
+
+  return heap_.Allocate<Edge>(t, b, winding);
 }
 
 }  // namespace TRM

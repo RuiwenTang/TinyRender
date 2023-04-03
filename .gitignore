@@ -5,3 +5,4 @@ buildXcode
 config.h
 cmake-*
 **/.cache
+.idea/*
