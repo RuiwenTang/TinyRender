@@ -121,6 +121,37 @@ bool Edge::intersect(Edge* other, glm::vec2* point) {
   return true;
 }
 
+void Edge::recompute() {
+  le_a = static_cast<double>(bottom->point.y) - top->point.y;
+  le_b = static_cast<double>(top->point.x) - bottom->point.x;
+  le_c = static_cast<double>(top->point.y) * bottom->point.x -
+         static_cast<double>(top->point.x) * bottom->point.y;
+}
+
+void Edge::set_top(Vertex* v) {
+  // remove this edge from top's below list
+  LinkedList<Edge>::Remove<&Edge::below_prev, &Edge::below_next>(
+      this, &top->edge_below.head, &top->edge_below.tail);
+  // update top vertex
+  top = v;
+  // recompute line equation
+  recompute();
+  // insert self to new top's below list
+  top->insert_below(this);
+}
+
+void Edge::set_bottom(Vertex* v) {
+  // remove this edge from bottom's above list
+  LinkedList<Edge>::Remove<&Edge::above_prev, &Edge::above_next>(
+      this, &bottom->edge_above.head, &bottom->edge_above.tail);
+  // update bottom vertex
+  bottom = v;
+  // recompute line equation
+  recompute();
+  // insert self to new bottom's above list
+  bottom->insert_below(this);
+}
+
 Triangulation::Triangulation() : heap_(), out_lines_(), mesh_() {}
 
 void Triangulation::add_path(const std::vector<glm::vec2>& points) {
@@ -137,6 +168,8 @@ void Triangulation::do_triangulate(
     const std::function<void(const glm::vec2&, const glm::vec2&,
                              const glm::vec2&)>& callback) {
   build_mesh();
+
+  merge_vertices();
 }
 
 void Triangulation::build_mesh() {
@@ -167,6 +200,37 @@ void Triangulation::build_mesh() {
 
   for (auto const& v : temp) {
     mesh_.append(v);
+  }
+}
+
+void Triangulation::merge_vertices() {
+  if (!mesh_.head) {
+    // mesh is empty
+    return;
+  }
+
+  for (auto v = mesh_.head->next; v;) {
+    auto next = v->next;
+
+    if (VertexCompare::Compare(v->point, v->prev->point)) {
+      // already sorted, if means this two points is same
+      v->point = v->prev->point;
+    }
+
+    if (v->point == v->prev->point) {
+      // merge v into v->prev
+      while (auto e = v->edge_above.head) {
+        e->set_bottom(v->prev);
+      }
+
+      while (auto e = v->edge_below.head) {
+        e->set_top(v->prev);
+      }
+
+      mesh_.remove(v);
+    }
+
+    v = next;
   }
 }
 

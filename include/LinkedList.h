@@ -8,8 +8,7 @@ struct LinkedList {
   T* tail = nullptr;
 
   LinkedList() = default;
-  LinkedList(T* head, T* tail): head(head), tail(tail) {}
-
+  LinkedList(T* head, T* tail) : head(head), tail(tail) {}
 
   template <T* T::*Prev, T* T::*Next>
   static void Insert(T* t, T* prev, T* next, T** head, T** tail) {
@@ -30,7 +29,7 @@ struct LinkedList {
   }
 
   template <T* T::*Prev, T* T::*Next>
-  void Remove(T* t, T** head, T** tail) {
+  static void Remove(T* t, T** head, T** tail) {
     if (t->*Prev) {
       t->*Prev->*Next = t->*Next;
     } else if (head) {
@@ -47,4 +46,4 @@ struct LinkedList {
   }
 };
 
-}
+}  // namespace TRM

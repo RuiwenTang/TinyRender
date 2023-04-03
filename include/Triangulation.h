@@ -86,6 +86,12 @@ struct Edge : public Object {
   // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
   bool intersect(Edge* other, glm::vec2* point);
 
+  void recompute();
+
+  void set_bottom(Vertex* v);
+
+  void set_top(Vertex* v);
+
  private:
   double le_a;
   double le_b;
@@ -120,6 +126,8 @@ class Triangulation {
 
  private:
   void build_mesh();
+
+  void merge_vertices();
 
   Edge* make_edge(Vertex* p1, Vertex* p2);
 
