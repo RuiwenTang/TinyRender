@@ -11,19 +11,20 @@ using namespace TRM;
 #define WIDTH 800
 #define HEIGHT 600
 
-std::vector<glm::vec2> build_mesh() {
-
-  std::vector<glm::vec2> pts{
-      {199.f, 34.f},  {253.f, 143.f}, {374.f, 160.f}, {287.f, 244.f},
-      {244.f, 374.f}, {200.f, 280.f}, {150.f, 374.f}, {112.f, 245.f},
-      {26.f, 161.f},  {146.f, 143.f}, {199.f, 34.f},
+int main(int argc, const char** argv) {
+  std::vector<glm::vec2> edge_list{
+      {10, 10},
+      {100, 10},
+      {10, 100},
+      {10, 10},
   };
 
-  return pts;
-}
-
-int main(int argc, const char** argv) {
-  auto edge_list = build_mesh();
+  std::vector<glm::vec2> edge_list2{
+      {100, 10},
+      {10, 100},
+      {100, 100},
+      {100, 10},
+  };
 
   std::shared_ptr<Bitmap> framebuffer = std::make_shared<Bitmap>(WIDTH, HEIGHT);
   framebuffer->ClearWithColor(Color::ColorWhite());
@@ -40,6 +41,16 @@ int main(int argc, const char** argv) {
     }
   }
 
+  for (size_t i = 0; i < edge_list2.size(); i++) {
+    if (i == edge_list2.size() - 1) {
+      render.DrawLine(edge_list2[i].x, edge_list2[i].y, edge_list2[0].x,
+                      edge_list2[0].y, Color::ColorGreen());
+    } else {
+      render.DrawLine(edge_list2[i].x, edge_list2[i].y, edge_list2[i + 1].x,
+                      edge_list2[i + 1].y, Color::ColorGreen());
+    }
+  }
+
   framebuffer->WriteToPng("triangulation_example.png");
 
   framebuffer->ClearWithColor(Color::ColorWhite());
@@ -47,6 +58,7 @@ int main(int argc, const char** argv) {
   Triangulation triangulation{};
 
   triangulation.add_path(edge_list);
+  triangulation.add_path(edge_list2);
 
   triangulation.do_triangulate([ren = &render](glm::vec2 const& p1,
                                                glm::vec2 const& p2,

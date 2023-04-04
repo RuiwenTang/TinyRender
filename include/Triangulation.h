@@ -24,6 +24,11 @@ struct Vertex : public Object {
   LinkedList<Edge> edge_above = {};
   LinkedList<Edge> edge_below = {};
 
+  // left enclosing edge during sweep line
+  Edge* left = nullptr;
+  // right enclosing edge during sweep line
+  Edge* right = nullptr;
+
   glm::vec2 point = {};
 
   Vertex() = default;
@@ -68,6 +73,11 @@ struct Edge : public Object {
   Edge* below_prev = nullptr;
   Edge* below_next = nullptr;
 
+  // left edge in active list during sweep line
+  Edge* left = nullptr;
+  // right edge in active list during sweep line
+  Edge* right = nullptr;
+
   int32_t winding = 1;
 
   Edge(Vertex* top, Vertex* bottom, int32_t winding);
@@ -96,6 +106,24 @@ struct Edge : public Object {
   double le_a;
   double le_b;
   double le_c;
+};
+
+struct ActiveEdgeList : public LinkedList<Edge> {
+  ActiveEdgeList() = default;
+  ~ActiveEdgeList() = default;
+
+  void insert(Edge* edge, Edge* prev, Edge* next);
+  void insert(Edge* edge, Edge* prev);
+
+  void append(Edge* edge);
+  void remove(Edge* edge);
+
+  bool contains(Edge* edge);
+
+  // move event point from current to dst
+  void rewind(Vertex** current, Vertex* dst);
+
+  void find_enclosing(Vertex* v, Edge** left, Edge** right);
 };
 
 class ObjectHeap {
@@ -129,7 +157,17 @@ class Triangulation {
 
   void merge_vertices();
 
+  void flat_mesh();
+
   Edge* make_edge(Vertex* p1, Vertex* p2);
+
+  bool check_intersection(Edge* left, Edge* right, ActiveEdgeList* ael,
+                          Vertex** current);
+
+  bool split_edge(Edge* edge, Vertex* v, ActiveEdgeList* ael, Vertex** current);
+
+  bool intersect_pair_edge(Edge* left, Edge* right, ActiveEdgeList* ael,
+                        Vertex** current);
 
  private:
   ObjectHeap heap_;

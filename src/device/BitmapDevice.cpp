@@ -41,7 +41,7 @@ void BitmapDevice::Line(int32_t x0, int32_t y0, int32_t x1, int32_t y1,
       int32_t i_x = li.x2_hr() % li.subpixel_mask;
       int32_t i_y = li.y2_hr() % li.subpixel_mask;
 
-      double alpha = std::sqrt(i_x * i_y  / (255.0 * 255.0)) * 255;
+      double alpha = 255;
 
       auto rgba = color.rgba();
       mBitmap->SetPixel(s_x, s_y, Color(rgba[0], rgba[1], rgba[2], (uint8_t) alpha));
