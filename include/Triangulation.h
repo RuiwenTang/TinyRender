@@ -20,8 +20,26 @@ struct Vertex : public Object {
   Vertex* prev = nullptr;
   Vertex* next = nullptr;
 
-  // all edge above this point, sorted by y first, then x
+  /**
+   * All edge above and end with this vertex
+   *
+   *          head           tail
+   *              \   ...    /
+   *                   v
+   *
+   */
   LinkedList<Edge> edge_above = {};
+  /**
+   *  All edge below this vertex
+   *
+   *
+   *              v
+   *             / \
+   *          head  tail
+   *          /      \
+   *            ...
+   *
+   */
   LinkedList<Edge> edge_below = {};
 
   // left enclosing edge during sweep line
@@ -64,6 +82,8 @@ struct VertexList : public LinkedList<Vertex> {
   void close();
 };
 
+struct Polygon;
+
 struct Edge : public Object {
   Vertex* top = nullptr;
   Vertex* bottom = nullptr;
@@ -77,6 +97,19 @@ struct Edge : public Object {
   Edge* left = nullptr;
   // right edge in active list during sweep line
   Edge* right = nullptr;
+
+  Edge* right_poly_prev = nullptr;
+  Edge* right_poly_next = nullptr;
+  Edge* left_poly_prev = nullptr;
+  Edge* left_poly_next = nullptr;
+
+  // left polygon during sweep line
+  Polygon* left_poly = nullptr;
+  // right polygon during sweep line
+  Polygon* right_poly = nullptr;
+
+  bool used_in_left = false;
+  bool used_in_right = false;
 
   int32_t winding = 1;
 
@@ -106,6 +139,56 @@ struct Edge : public Object {
   double le_a;
   double le_b;
   double le_c;
+};
+
+enum class Side {
+  kLeft,
+  kRight,
+};
+
+class ObjectHeap;
+
+struct MonotonePolygon : public Object {
+  Side side;
+
+  Edge* first = nullptr;
+  Edge* last = nullptr;
+
+  int32_t winding;
+
+  MonotonePolygon* prev = nullptr;
+  MonotonePolygon* next = nullptr;
+
+  MonotonePolygon(Edge* edge, Side side, int32_t winding)
+      : side(side), winding(winding) {
+    add_edge(edge);
+  }
+
+  ~MonotonePolygon() override = default;
+
+  void add_edge(Edge* edge);
+};
+
+struct Polygon : public Object {
+  Vertex* first_vert;
+  int32_t winding;
+
+  // vertex count
+  int32_t count = 0;
+  Polygon* parent = nullptr;
+  Polygon* next = nullptr;
+
+  MonotonePolygon* head = nullptr;
+  MonotonePolygon* tail = nullptr;
+
+  Polygon(Vertex* first, int32_t winding)
+      : first_vert(first), winding(winding) {}
+
+  ~Polygon() override = default;
+
+  Polygon* add_edge(Edge* e, Side side, ObjectHeap* heap);
+
+  Vertex* last_vertex() const;
 };
 
 struct ActiveEdgeList : public LinkedList<Edge> {
@@ -157,7 +240,9 @@ class Triangulation {
 
   void merge_vertices();
 
-  void flat_mesh();
+  void simplify_mesh();
+
+  void tess_mesh();
 
   Edge* make_edge(Vertex* p1, Vertex* p2);
 
@@ -167,12 +252,14 @@ class Triangulation {
   bool split_edge(Edge* edge, Vertex* v, ActiveEdgeList* ael, Vertex** current);
 
   bool intersect_pair_edge(Edge* left, Edge* right, ActiveEdgeList* ael,
-                        Vertex** current);
+                           Vertex** current);
 
+  Polygon* make_poly(Vertex* v, int32_t winding);
  private:
   ObjectHeap heap_;
   std::vector<VertexList> out_lines_;
   VertexList mesh_;
+  Polygon* poly_list_ = nullptr;
 };
 
 }  // namespace TRM

@@ -1,13 +1,16 @@
 #include <Triangulation.h>
 
 #include <algorithm>
+#include <glm/gtx/string_cast.hpp>
+#include <iostream>
 #include <limits>
 
 namespace TRM {
 
 void Vertex::insert_above(Edge* e) {
-  if (e->top->point == e->bottom->point ||  // horizontal
-      VertexCompare::Compare(e->bottom->point, e->top->point)) {
+  if (e->top->point == e->bottom->point ||                     // no edge
+      VertexCompare::Compare(e->bottom->point, e->top->point)  // not above
+  ) {
     return;
   }
 
@@ -28,8 +31,9 @@ void Vertex::insert_above(Edge* e) {
 }
 
 void Vertex::insert_below(Edge* e) {
-  if (e->top->point == e->bottom->point ||
-      VertexCompare::Compare(e->bottom->point, e->top->point)) {
+  if (e->top->point == e->bottom->point ||                     // no edge
+      VertexCompare::Compare(e->bottom->point, e->top->point)  // not below
+  ) {
     return;
   }
 
@@ -245,6 +249,70 @@ void ActiveEdgeList::find_enclosing(Vertex* v, Edge** left, Edge** right) {
   *right = next;
 }
 
+void MonotonePolygon::add_edge(Edge* edge) {
+  if (side == Side::kRight) {
+    LinkedList<Edge>::Insert<&Edge::right_poly_prev, &Edge::right_poly_next>(
+        edge, last, nullptr, &first, &last);
+  } else {
+    LinkedList<Edge>::Insert<&Edge::left_poly_prev, &Edge::left_poly_next>(
+        edge, last, nullptr, &first, &last);
+  }
+}
+
+Polygon* Polygon::add_edge(Edge* e, Side side, ObjectHeap* heap) {
+  auto p_parent = this->parent;
+  auto poly = this;
+
+  if (side == Side::kRight) {
+    if (e->used_in_right) {
+      return this;
+    }
+  } else {
+    if (e->used_in_left) {
+      return this;
+    }
+  }
+
+  if (p_parent) {
+    this->parent = p_parent = nullptr;
+  }
+
+  if (!this->tail) {
+    this->head = this->tail = heap->Allocate<MonotonePolygon>(e, side, winding);
+    this->count += 2;
+  } else if (e->bottom == this->tail->last->bottom) {
+    // close this polygon
+    return poly;
+  } else if (side == this->tail->side) {
+    this->tail->add_edge(e);
+    this->count++;
+  } else {
+    e = heap->Allocate<Edge>(this->tail->last->bottom, e->bottom, 1);
+    this->tail->add_edge(e);
+    this->count++;
+
+    if (p_parent) {
+      p_parent->add_edge(e, side, heap);
+      poly = p_parent;
+    } else {
+      auto m = heap->Allocate<MonotonePolygon>(e, side, this->winding);
+      m->prev = this->tail;
+      this->tail->next = m;
+      this->tail = m;
+    }
+  }
+
+  return poly;
+}
+
+Vertex* Polygon::last_vertex() const {
+  if (tail) {
+    return tail->last->bottom;
+  }
+
+  return first_vert;
+}
+
 Triangulation::Triangulation() : heap_(), out_lines_(), mesh_() {}
 
 void Triangulation::add_path(const std::vector<glm::vec2>& points) {
@@ -264,7 +332,9 @@ void Triangulation::do_triangulate(
 
   merge_vertices();
 
-  flat_mesh();
+  simplify_mesh();
+
+  tess_mesh();
 }
 
 void Triangulation::build_mesh() {
@@ -308,7 +378,7 @@ void Triangulation::merge_vertices() {
     auto next = v->next;
 
     if (VertexCompare::Compare(v->point, v->prev->point)) {
-      // already sorted, if means this two points is same
+      // already sorted, this means this two points is same
       v->point = v->prev->point;
     }
 
@@ -524,7 +594,16 @@ bool Triangulation::intersect_pair_edge(Edge* left, Edge* right,
   return split_edge(split, split_at, ael, current);
 }
 
-void Triangulation::flat_mesh() {
+Polygon* Triangulation::make_poly(Vertex* v, int32_t winding) {
+  auto poly = heap_.Allocate<Polygon>(v, winding);
+
+  poly->next = poly_list_;
+  poly_list_ = poly;
+
+  return poly;
+}
+
+void Triangulation::simplify_mesh() {
   ActiveEdgeList ael;
 
   for (Vertex* v = mesh_.head; v != nullptr; v = v->next) {
@@ -575,6 +654,135 @@ void Triangulation::flat_mesh() {
     for (auto e = v->edge_below.head; e; e = e->below_next) {
       ael.insert(e, left);
       left = e;
+    }
+  }
+}
+
+void Triangulation::tess_mesh() {
+  ActiveEdgeList ael;
+
+  for (auto v = mesh_.head; v != nullptr; v = v->next) {
+    if (!v->is_connected()) {
+      continue;
+    }
+
+    std::cout << "=======================" << std::endl;
+
+    std::cout << "current = " << glm::to_string(v->point) << std::endl;
+
+    Edge* left_enclosing;
+    Edge* right_enclosing;
+
+    ael.find_enclosing(v, &left_enclosing, &right_enclosing);
+
+    /**
+     *
+     *                   ...
+     *                      \
+     *      left_poly      head
+     *                          v
+     *
+     */
+    Polygon* left_poly = nullptr;
+    /**
+     *
+     *              ...
+     *         /
+     *       tail     right_poly
+     *     v
+     *
+     */
+    Polygon* right_poly = nullptr;
+
+    if (v->edge_above.head) {
+      left_poly = v->edge_above.head->left_poly;
+      right_poly = v->edge_above.tail->right_poly;
+    } else {
+      left_poly = left_enclosing ? left_enclosing->right_poly : nullptr;
+      right_poly = right_enclosing ? right_enclosing->left_poly : nullptr;
+    }
+
+    if (v->edge_above.head) {
+      // add above edge first
+      if (left_poly) {
+        left_poly =
+            left_poly->add_edge(v->edge_above.head, Side::kRight, &heap_);
+      }
+
+      if (right_poly) {
+        right_poly =
+            right_poly->add_edge(v->edge_above.tail, Side::kLeft, &heap_);
+      }
+
+      for (auto e = v->edge_above.head; e != v->edge_above.tail;
+           e = e->above_next) {
+        auto right_edge = e->above_next;
+
+        ael.remove(e);
+
+        if (e->right_poly) {
+          e->right_poly->add_edge(e, Side::kLeft, &heap_);
+        }
+
+        if (right_edge->left_poly) {
+          right_edge->left_poly->add_edge(e, Side::kRight, &heap_);
+        }
+      }
+
+      ael.remove(v->edge_above.tail);
+      if (!v->edge_below.head) {
+        if (left_poly && right_poly && left_poly != right_poly) {
+          left_poly->parent = right_poly;
+          right_poly->parent = left_poly;
+        }
+      }
+    }
+
+    if (v->edge_below.head) {
+      if (!v->edge_below.head) {
+        if (left_poly && right_poly) {
+          if (left_poly == right_poly) {
+            if (left_poly->tail && left_poly->tail->side == Side::kLeft) {
+              left_poly = make_poly(v, left_poly->winding);
+
+              left_enclosing->right_poly = left_poly;
+            } else {
+              right_poly = make_poly(v, right_poly->winding);
+
+              right_enclosing->left_poly = right_poly;
+            }
+          }
+
+          auto join = heap_.Allocate<Edge>(left_poly->last_vertex(), v, 1);
+
+          left_poly->add_edge(join, Side::kRight, &heap_);
+          right_poly->add_edge(join, Side::kLeft, &heap_);
+        }
+      }
+
+      auto left_edge = v->edge_below.head;
+      left_edge->left_poly = left_poly;
+
+      ael.insert(left_edge, left_enclosing);
+
+      for (auto right_edge = left_edge->below_next; right_edge;
+           right_edge = right_edge->below_next) {
+        ael.insert(right_edge, left_edge);
+
+        int32_t winding =
+            left_edge->left_poly ? left_edge->left_poly->winding : 0;
+        winding += left_edge->winding;
+
+        if (winding != 0) {
+          auto poly = make_poly(v, winding);
+
+          left_edge->right_poly = right_edge->left_poly = poly;
+        }
+
+        left_edge = right_edge;
+      }
+
+      v->edge_below.tail->right_poly = right_poly;
     }
   }
 }
