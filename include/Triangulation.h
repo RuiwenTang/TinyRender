@@ -169,6 +169,11 @@ struct MonotonePolygon : public Object {
   void add_edge(Edge* edge);
 };
 
+enum class FillType {
+  kWinding,
+  kEvenOdd,
+};
+
 struct Polygon : public Object {
   Vertex* first_vert;
   int32_t winding;
@@ -230,6 +235,8 @@ class Triangulation {
   Triangulation();
   ~Triangulation() = default;
 
+  void set_filltype(FillType type);
+
   void add_path(std::vector<glm::vec2> const& points);
 
   void do_triangulate(std::function<void(glm::vec2 const&, glm::vec2 const&,
@@ -244,6 +251,8 @@ class Triangulation {
 
   void tess_mesh();
 
+  bool match_filltype(Polygon* poly);
+
   Edge* make_edge(Vertex* p1, Vertex* p2);
 
   bool check_intersection(Edge* left, Edge* right, ActiveEdgeList* ael,
@@ -255,10 +264,16 @@ class Triangulation {
                            Vertex** current);
 
   Polygon* make_poly(Vertex* v, int32_t winding);
+
+  void emit_poly(MonotonePolygon* poly,
+                 const std::function<void(const glm::vec2&, const glm::vec2&,
+                                          const glm::vec2&)>& callback);
+
  private:
   ObjectHeap heap_;
   std::vector<VertexList> out_lines_;
   VertexList mesh_;
+  FillType fill_type_ = FillType::kWinding;
   Polygon* poly_list_ = nullptr;
 };
 

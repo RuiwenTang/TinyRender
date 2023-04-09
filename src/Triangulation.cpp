@@ -315,6 +315,8 @@ Vertex* Polygon::last_vertex() const {
 
 Triangulation::Triangulation() : heap_(), out_lines_(), mesh_() {}
 
+void Triangulation::set_filltype(FillType type) { fill_type_ = type; }
+
 void Triangulation::add_path(const std::vector<glm::vec2>& points) {
   out_lines_.emplace_back(VertexList{});
 
@@ -335,6 +337,21 @@ void Triangulation::do_triangulate(
   simplify_mesh();
 
   tess_mesh();
+
+  // output triangles
+  for (auto poly = poly_list_; poly; poly = poly->next) {
+    if (!match_filltype(poly)) {
+      continue;
+    }
+
+    if (poly->count < 3) {
+      continue;
+    }
+
+    for (auto m = poly->head; m; m = m->next) {
+      emit_poly(m, callback);
+    }
+  }
 }
 
 void Triangulation::build_mesh() {
@@ -783,6 +800,72 @@ void Triangulation::tess_mesh() {
       }
 
       v->edge_below.tail->right_poly = right_poly;
+    }
+  }
+}
+
+bool Triangulation::match_filltype(Polygon* poly) {
+  if (fill_type_ == FillType::kWinding) {
+    return poly->winding > 0;
+  } else {
+    return (poly->winding & 0x01) > 0;
+  }
+}
+
+void Triangulation::emit_poly(
+    MonotonePolygon* poly,
+    const std::function<void(const glm::vec2&, const glm::vec2&,
+                             const glm::vec2&)>& callback) {
+  auto e = poly->first;
+
+  VertexList vs;
+
+  vs.append(e->top);
+
+  int32_t count = 1;
+
+  while (e != nullptr) {
+    if (poly->side == Side::kRight) {
+      vs.append(e->bottom);
+      e = e->right_poly_next;
+    } else {
+      vs.prepend(e->bottom);
+      e = e->left_poly_next;
+    }
+    count++;
+  }
+
+  auto first = vs.head;
+  auto v = first->next;
+  while (v != vs.tail) {
+    auto prev = v->prev;
+    auto curr = v;
+    auto next = v->next;
+
+    if (count == 3) {
+      callback(prev->point, v->point, next->point);
+      return;
+    }
+
+    double ax = static_cast<double>(curr->point.x) - prev->point.x;
+    double ay = static_cast<double>(curr->point.y) - prev->point.y;
+    double bx = static_cast<double>(next->point.x) - curr->point.x;
+    double by = static_cast<double>(next->point.y) - curr->point.y;
+
+    if (ax * by - ay * bx >= 0.0) {
+      callback(prev->point, curr->point, next->point);
+      v->prev->next = v->next;
+      v->next->prev = v->prev;
+
+      count--;
+
+      if (v->prev == first) {
+        v = v->next;
+      } else {
+        v = v->prev;
+      }
+    } else {
+      v = v->next;
     }
   }
 }
