@@ -170,7 +170,7 @@ void Edge::set_bottom(Vertex* v) {
   // recompute line equation
   recompute();
   // insert self to new bottom's above list
-  bottom->insert_below(this);
+  bottom->insert_above(this);
 }
 
 void ActiveEdgeList::insert(Edge* edge, Edge* prev, Edge* next) {
@@ -624,7 +624,7 @@ void Triangulation::simplify_mesh() {
   ActiveEdgeList ael;
 
   for (Vertex* v = mesh_.head; v != nullptr; v = v->next) {
-    if (v->edge_above.head == nullptr && v->edge_below.head == nullptr) {
+    if (!v->is_connected()) {
       continue;
     }
 
@@ -741,7 +741,7 @@ void Triangulation::tess_mesh() {
           e->right_poly->add_edge(e, Side::kLeft, &heap_);
         }
 
-        if (right_edge->left_poly) {
+        if (right_edge->left_poly && right_edge->left_poly != e->right_poly) {
           right_edge->left_poly->add_edge(e, Side::kRight, &heap_);
         }
       }
@@ -756,15 +756,15 @@ void Triangulation::tess_mesh() {
     }
 
     if (v->edge_below.head) {
-      if (!v->edge_below.head) {
+      if (!v->edge_above.head) {
         if (left_poly && right_poly) {
           if (left_poly == right_poly) {
             if (left_poly->tail && left_poly->tail->side == Side::kLeft) {
-              left_poly = make_poly(v, left_poly->winding);
+              left_poly = make_poly(left_poly->last_vertex(), left_poly->winding);
 
               left_enclosing->right_poly = left_poly;
             } else {
-              right_poly = make_poly(v, right_poly->winding);
+              right_poly = make_poly(right_poly->last_vertex(), right_poly->winding);
 
               right_enclosing->left_poly = right_poly;
             }
@@ -772,8 +772,8 @@ void Triangulation::tess_mesh() {
 
           auto join = heap_.Allocate<Edge>(left_poly->last_vertex(), v, 1);
 
-          left_poly->add_edge(join, Side::kRight, &heap_);
-          right_poly->add_edge(join, Side::kLeft, &heap_);
+          left_poly = left_poly->add_edge(join, Side::kRight, &heap_);
+          right_poly = right_poly->add_edge(join, Side::kLeft, &heap_);
         }
       }
 
@@ -806,9 +806,9 @@ void Triangulation::tess_mesh() {
 
 bool Triangulation::match_filltype(Polygon* poly) {
   if (fill_type_ == FillType::kWinding) {
-    return poly->winding > 0;
+    return poly->winding != 0;
   } else {
-    return (poly->winding & 0x01) > 0;
+    return (poly->winding & 0x01) != 0;
   }
 }
 
