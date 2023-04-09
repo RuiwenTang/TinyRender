@@ -1,5 +1,7 @@
 #include <Bitmap.h>
 
+#include <cstring>
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #ifdef _MSC_VER
 #define STBI_MSC_SECURE_CRT

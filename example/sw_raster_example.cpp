@@ -2,6 +2,7 @@
 #include <SWRaster.h>
 
 #include <iostream>
+#include <memory>
 
 #define WIDTH 800
 #define HEIGHT 600

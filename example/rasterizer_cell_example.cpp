@@ -2,6 +2,7 @@
 #include <RasterizerCells.h>
 
 #include <iostream>
+#include <memory>
 
 #define UP_SCALE(x) (x << TRM::poly_subpixel_shift)
 

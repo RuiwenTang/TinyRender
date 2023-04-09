@@ -2,6 +2,7 @@
 #include <v_ft_raster.h>
 
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #define WIDTH 800
