@@ -1,54 +1,83 @@
-#include <Triangulation.h>
+#include <PolygonMerge.h>
 
-#include <algorithm>
 #include <glm/gtx/string_cast.hpp>
-#include <iostream>
-#include <limits>
 
 namespace TRM {
 
-Triangulation::Triangulation() : heap_(), out_lines_(), mesh_() {}
+bool Rect::contains(Rect const& r) {
+  return !this->is_empty() && left <= r.left && top <= r.top &&
+         right >= r.right && bottom >= r.bottom;
+}
 
-void Triangulation::set_filltype(FillType type) { fill_type_ = type; }
+bool Rect::intersects(Rect const& r) {
+  float L = std::max(left, r.left);
+  float R = std::min(right, r.right);
+  float T = std::max(top, r.top);
+  float B = std::min(bottom, r.bottom);
 
-void Triangulation::add_path(const std::vector<glm::vec2>& points) {
+  return L < R && T < B;
+}
+
+bool Rect::is_empty() const {
+  float width = right - left;
+  float height = bottom - top;
+
+  if (width <= 0.f || height <= 0.f) {
+    return true;
+  }
+
+  return false;
+}
+
+PolygonMerge::PolygonMerge() : heap_(), out_lines_(), mesh_() {}
+
+void PolygonMerge::set_filltype(FillType type) { fill_type_ = type; }
+
+void PolygonMerge::add_polygon(const std::vector<glm::vec2>& points,
+                               Rect* bounds) {
   out_lines_.emplace_back(VertexList{});
 
   for (auto const& p : points) {
     auto v = heap_.Allocate<Vertex>(p);
 
+    bounds->left = std::min(bounds->left, p.x);
+    bounds->top = std::min(bounds->top, p.y);
+    bounds->right = std::max(bounds->right, p.x);
+    bounds->bottom = std::max(bounds->bottom, p.y);
+
     out_lines_.back().append(v);
   }
 }
 
-void Triangulation::do_triangulate(
-    const std::function<void(const glm::vec2&, const glm::vec2&,
-                             const glm::vec2&)>& callback) {
+bool PolygonMerge::do_merge(std::vector<glm::vec2> const& p1,
+                            std::vector<glm::vec2> const& p2) {
+  add_polygon(p1, &rect_1_);
+  add_polygon(p2, &rect_2_);
+
+  if (!rect_1_.intersects(rect_2_)) {
+    if (rect_1_.contains(rect_2_)) {
+      // all is rect 1
+      result_.emplace_back(p1);
+      return true;
+    } else if (rect_2_.contains(rect_1_)) {
+      // all is rect 2
+      result_.emplace_back(p2);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   build_mesh();
 
   merge_vertices();
 
   simplify_mesh();
 
-  tess_mesh();
-
-  // output triangles
-  for (auto poly = poly_list_; poly; poly = poly->next) {
-    if (!match_filltype(poly)) {
-      continue;
-    }
-
-    if (poly->count < 3) {
-      continue;
-    }
-
-    for (auto m = poly->head; m; m = m->next) {
-      emit_poly(m, callback);
-    }
-  }
+  merge_mesh();
 }
 
-void Triangulation::build_mesh() {
+void PolygonMerge::build_mesh() {
   std::vector<Vertex*> temp{};
 
   for (auto const& list : out_lines_) {
@@ -79,7 +108,7 @@ void Triangulation::build_mesh() {
   }
 }
 
-void Triangulation::merge_vertices() {
+void PolygonMerge::merge_vertices() {
   if (!mesh_.head) {
     // mesh is empty
     return;
@@ -110,7 +139,7 @@ void Triangulation::merge_vertices() {
   }
 }
 
-Edge* Triangulation::make_edge(Vertex* t, Vertex* b) {
+Edge* PolygonMerge::make_edge(Vertex* t, Vertex* b) {
   if (!t || !b || t->point == b->point) {
     return nullptr;
   }
@@ -125,8 +154,8 @@ Edge* Triangulation::make_edge(Vertex* t, Vertex* b) {
   return heap_.Allocate<Edge>(t, b, winding);
 }
 
-bool Triangulation::check_intersection(Edge* left, Edge* right,
-                                       ActiveEdgeList* ael, Vertex** current) {
+bool PolygonMerge::check_intersection(Edge* left, Edge* right,
+                                      ActiveEdgeList* ael, Vertex** current) {
   if (!left || !right) {
     return false;
   }
@@ -187,8 +216,8 @@ bool Triangulation::check_intersection(Edge* left, Edge* right,
   return intersect_pair_edge(left, right, ael, current);
 }
 
-bool Triangulation::split_edge(Edge* edge, Vertex* v, ActiveEdgeList* ael,
-                               Vertex** current) {
+bool PolygonMerge::split_edge(Edge* edge, Vertex* v, ActiveEdgeList* ael,
+                              Vertex** current) {
   if (!edge->top || !edge->bottom || v == edge->top || v == edge->bottom) {
     return false;
   }
@@ -257,8 +286,8 @@ bool Triangulation::split_edge(Edge* edge, Vertex* v, ActiveEdgeList* ael,
   return true;
 }
 
-bool Triangulation::intersect_pair_edge(Edge* left, Edge* right,
-                                        ActiveEdgeList* ael, Vertex** current) {
+bool PolygonMerge::intersect_pair_edge(Edge* left, Edge* right,
+                                       ActiveEdgeList* ael, Vertex** current) {
   if (!left->top || !left->bottom || !right->top || !right->bottom) {
     return false;
   }
@@ -305,16 +334,130 @@ bool Triangulation::intersect_pair_edge(Edge* left, Edge* right,
   return split_edge(split, split_at, ael, current);
 }
 
-Polygon* Triangulation::make_poly(Vertex* v, int32_t winding) {
-  auto poly = heap_.Allocate<Polygon>(v, winding);
+void PolygonMerge::remove_inner_edges() {
+  for (auto v = mesh_.head; v; v = v->next) {
+    for (auto e = v->edge_below.head; e;) {
+      auto next = e->below_next;
 
-  poly->next = poly_list_;
-  poly_list_ = poly;
+      bool removed = false;
 
-  return poly;
+      while (next && next->top->point == e->top->point &&
+             next->bottom->point == e->bottom->point) {
+        removed = true;
+
+        auto temp = next;
+        next = next->below_next;
+        temp->disconnect();
+      }
+
+      if (removed) {
+        e->disconnect();
+      }
+
+      e = next;
+    }
+  }
+
+  ActiveEdgeList ael{};
+
+  for (auto v = mesh_.head; v; v = v->next) {
+    if (!v->is_connected()) {
+      continue;
+    }
+
+    Edge* left_enclosing = nullptr;
+    Edge* right_enclosing = nullptr;
+
+    ael.find_enclosing(v, &left_enclosing, &right_enclosing);
+
+    bool prev_filled =
+        left_enclosing && match_filltype(left_enclosing->winding);
+
+    for (auto* e = v->edge_above.head; e;) {
+      auto next = e->above_next;
+      ael.remove(e);
+
+      bool filled = match_filltype(e->winding);
+
+      if (filled == prev_filled) {
+        e->disconnect();
+      }
+
+      prev_filled = filled;
+      e = next;
+    }
+
+    auto prev = left_enclosing;
+
+    for (auto e = v->edge_below.head; e; e = e->below_next) {
+      if (prev) {
+        e->winding += prev->winding;
+      }
+
+      ael.insert(e, prev);
+      prev = e;
+    }
+  }
 }
 
-void Triangulation::simplify_mesh() {
+void PolygonMerge::extract_boundary(Edge* e) {
+  Path& path = result_.back();
+
+  bool down = e->winding & 1;
+
+  auto start = down ? e->top : e->bottom;
+  path.emplace_back(start->point);
+
+  do {
+    e->winding = down ? 1 : -1;
+
+    if (down) {
+      path.emplace_back(e->bottom->point);
+    } else {
+      path.emplace_back(e->top->point);
+    }
+
+    Edge* next;
+
+    if (down) {
+      if ((next = e->above_next)) {
+        down = false;
+      } else if ((next = e->bottom->edge_below.tail)) {
+        down = true;
+      } else if ((next = e->above_prev)) {
+        down = false;
+      }
+    } else {
+      if ((next = e->below_prev)) {
+        down = true;
+      } else if ((next = e->top->edge_above.head)) {
+        down = false;
+      } else if ((next = e->below_next)) {
+        down = true;
+      }
+    }
+
+    e->disconnect();
+    e = next;
+
+  } while (e && (down ? e->top : e->bottom) != start);
+
+  for (auto const& p : path) {
+    std::cout << "\t p : " << glm::to_string(p) << std::endl;
+  }
+}
+
+bool PolygonMerge::match_filltype(int32_t winding) {
+  if (fill_type_ == FillType::kWinding) {
+    return winding != 0;
+  } else {
+    return winding & 1;
+  }
+}
+
+void PolygonMerge::begin_path() { result_.emplace_back(Path{}); }
+
+void PolygonMerge::simplify_mesh() {
   ActiveEdgeList ael;
 
   for (Vertex* v = mesh_.head; v != nullptr; v = v->next) {
@@ -369,199 +512,15 @@ void Triangulation::simplify_mesh() {
   }
 }
 
-void Triangulation::tess_mesh() {
-  ActiveEdgeList ael;
+void PolygonMerge::merge_mesh() {
+  remove_inner_edges();
 
-  for (auto v = mesh_.head; v != nullptr; v = v->next) {
-    if (!v->is_connected()) {
-      continue;
-    }
-
-    std::cout << "=======================" << std::endl;
-
-    std::cout << "current = " << glm::to_string(v->point) << std::endl;
-
-    Edge* left_enclosing;
-    Edge* right_enclosing;
-
-    ael.find_enclosing(v, &left_enclosing, &right_enclosing);
-
-    /**
-     *
-     *                   ...
-     *                      \
-     *      left_poly      head
-     *                          v
-     *
-     */
-    Polygon* left_poly = nullptr;
-    /**
-     *
-     *              ...
-     *         /
-     *       tail     right_poly
-     *     v
-     *
-     */
-    Polygon* right_poly = nullptr;
-
-    if (v->edge_above.head) {
-      left_poly = v->edge_above.head->left_poly;
-      right_poly = v->edge_above.tail->right_poly;
-    } else {
-      left_poly = left_enclosing ? left_enclosing->right_poly : nullptr;
-      right_poly = right_enclosing ? right_enclosing->left_poly : nullptr;
-    }
-
-    if (v->edge_above.head) {
-      // add above edge first
-      if (left_poly) {
-        left_poly =
-            left_poly->add_edge(v->edge_above.head, Side::kRight, &heap_);
-      }
-
-      if (right_poly) {
-        right_poly =
-            right_poly->add_edge(v->edge_above.tail, Side::kLeft, &heap_);
-      }
-
-      for (auto e = v->edge_above.head; e != v->edge_above.tail;
-           e = e->above_next) {
-        auto right_edge = e->above_next;
-
-        ael.remove(e);
-
-        if (e->right_poly) {
-          e->right_poly->add_edge(e, Side::kLeft, &heap_);
-        }
-
-        if (right_edge->left_poly && right_edge->left_poly != e->right_poly) {
-          right_edge->left_poly->add_edge(e, Side::kRight, &heap_);
-        }
-      }
-
-      ael.remove(v->edge_above.tail);
-      if (!v->edge_below.head) {
-        if (left_poly && right_poly && left_poly != right_poly) {
-          left_poly->parent = right_poly;
-          right_poly->parent = left_poly;
-        }
-      }
-    }
-
-    if (v->edge_below.head) {
-      if (!v->edge_above.head) {
-        if (left_poly && right_poly) {
-          if (left_poly == right_poly) {
-            if (left_poly->tail && left_poly->tail->side == Side::kLeft) {
-              left_poly =
-                  make_poly(left_poly->last_vertex(), left_poly->winding);
-
-              left_enclosing->right_poly = left_poly;
-            } else {
-              right_poly =
-                  make_poly(right_poly->last_vertex(), right_poly->winding);
-
-              right_enclosing->left_poly = right_poly;
-            }
-          }
-
-          auto join = heap_.Allocate<Edge>(left_poly->last_vertex(), v, 1);
-
-          left_poly = left_poly->add_edge(join, Side::kRight, &heap_);
-          right_poly = right_poly->add_edge(join, Side::kLeft, &heap_);
-        }
-      }
-
-      auto left_edge = v->edge_below.head;
-      left_edge->left_poly = left_poly;
-
-      ael.insert(left_edge, left_enclosing);
-
-      for (auto right_edge = left_edge->below_next; right_edge;
-           right_edge = right_edge->below_next) {
-        ael.insert(right_edge, left_edge);
-
-        int32_t winding =
-            left_edge->left_poly ? left_edge->left_poly->winding : 0;
-        winding += left_edge->winding;
-
-        if (winding != 0) {
-          auto poly = make_poly(v, winding);
-
-          left_edge->right_poly = right_edge->left_poly = poly;
-        }
-
-        left_edge = right_edge;
-      }
-
-      v->edge_below.tail->right_poly = right_poly;
-    }
-  }
-}
-
-bool Triangulation::match_filltype(Polygon* poly) {
-  if (fill_type_ == FillType::kWinding) {
-    return poly->winding != 0;
-  } else {
-    return (poly->winding & 0x01) != 0;
-  }
-}
-
-void Triangulation::emit_poly(
-    MonotonePolygon* poly,
-    const std::function<void(const glm::vec2&, const glm::vec2&,
-                             const glm::vec2&)>& callback) {
-  auto e = poly->first;
-
-  VertexList vs;
-
-  vs.append(e->top);
-
-  int32_t count = 1;
-
-  while (e != nullptr) {
-    if (poly->side == Side::kRight) {
-      vs.append(e->bottom);
-      e = e->right_poly_next;
-    } else {
-      vs.prepend(e->bottom);
-      e = e->left_poly_next;
-    }
-    count++;
-  }
-
-  auto first = vs.head;
-  auto v = first->next;
-  while (v != vs.tail) {
-    auto prev = v->prev;
-    auto curr = v;
-    auto next = v->next;
-
-    if (count == 3) {
-      callback(prev->point, v->point, next->point);
-      return;
-    }
-
-    double ax = static_cast<double>(curr->point.x) - prev->point.x;
-    double ay = static_cast<double>(curr->point.y) - prev->point.y;
-    double bx = static_cast<double>(next->point.x) - curr->point.x;
-    double by = static_cast<double>(next->point.y) - curr->point.y;
-
-    if (ax * by - ay * bx >= 0.0) {
-      callback(prev->point, curr->point, next->point);
-      v->prev->next = v->next;
-      v->next->prev = v->prev;
-
-      count--;
-
-      if (v->prev == first) {
-        v = v->next;
-      } else {
-        v = v->prev;
-      }
-    } else {
-      v = v->next;
+  for (auto v = mesh_.head; v; v = v->next) {
+    while (v->edge_below.head) {
+      std::cout << "begin at : [" << glm::to_string(mesh_.head->point) << "]"
+                << std::endl;
+      begin_path();
+      extract_boundary(v->edge_below.head);
     }
   }
 }

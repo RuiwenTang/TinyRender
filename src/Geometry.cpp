@@ -166,6 +166,21 @@ void Edge::set_top(Vertex* v) {
   top->insert_below(this);
 }
 
+static void remove_edge_above(Edge* edge) {
+  LinkedList<Edge>::Remove<&Edge::above_prev, &Edge::above_next>(
+      edge, &edge->bottom->edge_above.head, &edge->bottom->edge_above.tail);
+}
+
+static void remove_edge_below(Edge* edge) {
+  LinkedList<Edge>::Remove<&Edge::below_prev, &Edge::below_next>(
+      edge, &edge->top->edge_below.head, &edge->top->edge_below.tail);
+}
+
+void Edge::disconnect() {
+  remove_edge_above(this);
+  remove_edge_below(this);
+}
+
 void Edge::set_bottom(Vertex* v) {
   // remove this edge from bottom's above list
   LinkedList<Edge>::Remove<&Edge::above_prev, &Edge::above_next>(

@@ -34,6 +34,7 @@ add_library(tinyRender
     src/RasterizerCells.cpp
     src/SWRaster.cpp
     src/Triangulation.cpp
+    src/PolygonMerge.cpp
     include/TinyRender.h
     include/TGAImage.h
     include/Model.h
@@ -46,6 +47,7 @@ add_library(tinyRender
     include/Triangulation.h
     include/AvlTree.h
     include/LinkedList.h
+    include/PolygonMerge.h
     freetype/v_ft_math.cpp
     freetype/v_ft_math.h
     freetype/v_ft_raster.cpp
@@ -94,3 +96,5 @@ target_link_libraries(ft_raster_example tinyRender)
 add_executable(triangulation_example example/triangulation_example.cpp)
 target_link_libraries(triangulation_example tinyRender)
 
+add_executable(polygon_merge_example example/polygon_merge_example.cpp)
+target_link_libraries(polygon_merge_example tinyRender)

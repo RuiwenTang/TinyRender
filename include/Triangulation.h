@@ -47,7 +47,6 @@ class Triangulation {
   void emit_poly(MonotonePolygon* poly,
                  const std::function<void(const glm::vec2&, const glm::vec2&,
                                           const glm::vec2&)>& callback);
-
  private:
   ObjectHeap heap_;
   std::vector<VertexList> out_lines_;

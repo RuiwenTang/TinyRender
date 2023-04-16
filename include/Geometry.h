@@ -190,6 +190,8 @@ struct Edge : public Object {
 
   void set_top(Vertex* v);
 
+  void disconnect();
+
  private:
   double le_a;
   double le_b;
