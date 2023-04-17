@@ -10,15 +10,16 @@ int main(int argc, const char** argv) {
   std::vector<glm::vec2> edge_list{
       {10, 10},
       {100, 10},
+      {100, 100},
       {10, 100},
       {10, 10},
   };
 
   std::vector<glm::vec2> edge_list2{
-      {100, 10},
-      {10, 100},
-      {100, 100},
-      {100, 10},
+      {20, 80},
+      {20, 20},
+      {80, 80},
+      {20, 80},
   };
 
 

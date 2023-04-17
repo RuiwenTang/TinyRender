@@ -54,20 +54,6 @@ bool PolygonMerge::do_merge(std::vector<glm::vec2> const& p1,
   add_polygon(p1, &rect_1_);
   add_polygon(p2, &rect_2_);
 
-  if (!rect_1_.intersects(rect_2_)) {
-    if (rect_1_.contains(rect_2_)) {
-      // all is rect 1
-      result_.emplace_back(p1);
-      return true;
-    } else if (rect_2_.contains(rect_1_)) {
-      // all is rect 2
-      result_.emplace_back(p2);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   build_mesh();
 
   merge_vertices();
@@ -75,6 +61,8 @@ bool PolygonMerge::do_merge(std::vector<glm::vec2> const& p1,
   simplify_mesh();
 
   merge_mesh();
+
+  return true;
 }
 
 void PolygonMerge::build_mesh() {
@@ -204,12 +192,11 @@ bool PolygonMerge::check_intersection(Edge* left, Edge* right,
 
         mesh_.insert(v, prev, next);
       }
-
-      ael->rewind(current, top ? top : v);
-
-      split_edge(left, v, ael, current);
-      split_edge(right, v, ael, current);
     }
+    ael->rewind(current, top ? top : v);
+
+    split_edge(left, v, ael, current);
+    split_edge(right, v, ael, current);
     return true;
   }
 
@@ -335,29 +322,6 @@ bool PolygonMerge::intersect_pair_edge(Edge* left, Edge* right,
 }
 
 void PolygonMerge::remove_inner_edges() {
-  for (auto v = mesh_.head; v; v = v->next) {
-    for (auto e = v->edge_below.head; e;) {
-      auto next = e->below_next;
-
-      bool removed = false;
-
-      while (next && next->top->point == e->top->point &&
-             next->bottom->point == e->bottom->point) {
-        removed = true;
-
-        auto temp = next;
-        next = next->below_next;
-        temp->disconnect();
-      }
-
-      if (removed) {
-        e->disconnect();
-      }
-
-      e = next;
-    }
-  }
-
   ActiveEdgeList ael{};
 
   for (auto v = mesh_.head; v; v = v->next) {
@@ -381,6 +345,12 @@ void PolygonMerge::remove_inner_edges() {
 
       if (filled == prev_filled) {
         e->disconnect();
+      } else if (next && next->top->point == e->top->point &&
+                 next->bottom->point == e->bottom->point) {
+        if (!filled) {
+          e->disconnect();
+          filled = true;
+        }
       }
 
       prev_filled = filled;
@@ -517,7 +487,7 @@ void PolygonMerge::merge_mesh() {
 
   for (auto v = mesh_.head; v; v = v->next) {
     while (v->edge_below.head) {
-      std::cout << "begin at : [" << glm::to_string(mesh_.head->point) << "]"
+      std::cout << "begin at : [" << glm::to_string(v->point) << "]"
                 << std::endl;
       begin_path();
       extract_boundary(v->edge_below.head);

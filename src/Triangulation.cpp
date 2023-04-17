@@ -175,12 +175,11 @@ bool Triangulation::check_intersection(Edge* left, Edge* right,
 
         mesh_.insert(v, prev, next);
       }
-
-      ael->rewind(current, top ? top : v);
-
-      split_edge(left, v, ael, current);
-      split_edge(right, v, ael, current);
     }
+    ael->rewind(current, top ? top : v);
+
+    split_edge(left, v, ael, current);
+    split_edge(right, v, ael, current);
     return true;
   }
 

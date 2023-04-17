@@ -74,7 +74,7 @@ class PolygonMerge {
   ObjectHeap heap_;
   std::vector<VertexList> out_lines_;
   VertexList mesh_;
-  FillType fill_type_ = FillType::kWinding;
+  FillType fill_type_ = FillType::kEvenOdd;
   Rect rect_1_ = {};
   Rect rect_2_ = {};
   std::vector<Path> result_ = {};
