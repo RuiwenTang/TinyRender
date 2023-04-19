@@ -487,6 +487,11 @@ void PolygonMerge::merge_mesh() {
 
   for (auto v = mesh_.head; v; v = v->next) {
     while (v->edge_below.head) {
+      auto winding = v->edge_below.head->winding;
+
+      if (winding != 0 && match_filltype(winding)) {
+        break;
+      }
       std::cout << "begin at : [" << glm::to_string(v->point) << "]"
                 << std::endl;
       begin_path();
