@@ -133,12 +133,25 @@ bool Edge::intersect(Edge* other, glm::vec2* point) {
     return false;
   }
 
+  double dx = static_cast<double>(other->top->point.x) - top->point.x;
+  double dy = static_cast<double>(other->top->point.y) - top->point.y;
+
+  double s_number = dy * other->le_b + dx * other->le_a;
+  double t_number = dy * le_b + dx * le_a;
+
+  if (denom > 0.0 ? (s_number < 0.0 || s_number > denom || t_number < 0.0 ||
+                     t_number > denom)
+                  : (s_number > 0.0 || s_number < denom || t_number > 0.0 ||
+                     t_number < denom)) {
+    return false;
+  }
+
   double scale = 1.0 / denom;
 
   point->x = glm::round(
-      static_cast<float>((le_b * other->le_c - other->le_b * le_c) * scale));
+      static_cast<float>(top->point.x - s_number * other->le_b * scale));
   point->y = glm::round(
-      static_cast<float>((other->le_a * le_c - le_a * other->le_c) * scale));
+      static_cast<float>(top->point.y + s_number * other->le_a * scale));
 
   if (glm::isinf(point->x) || glm::isinf(point->y)) {
     return false;
