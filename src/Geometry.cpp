@@ -294,7 +294,7 @@ Polygon* Polygon::add_edge(Edge* e, Side side, ObjectHeap* heap) {
   }
 
   if (p_parent) {
-    this->parent = p_parent = nullptr;
+    this->parent = p_parent->parent = nullptr;
   }
 
   if (!this->tail) {
