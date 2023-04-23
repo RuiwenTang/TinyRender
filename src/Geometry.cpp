@@ -149,9 +149,9 @@ bool Edge::intersect(Edge* other, glm::vec2* point) {
   double scale = 1.0 / denom;
 
   point->x = glm::round(
-      static_cast<float>(top->point.x - s_number * other->le_b * scale));
+      static_cast<float>(top->point.x - s_number * le_b * scale));
   point->y = glm::round(
-      static_cast<float>(top->point.y + s_number * other->le_a * scale));
+      static_cast<float>(top->point.y + s_number * le_a * scale));
 
   if (glm::isinf(point->x) || glm::isinf(point->y)) {
     return false;
